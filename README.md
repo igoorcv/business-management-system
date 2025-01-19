@@ -26,6 +26,44 @@ Um sistema web para gerenciar vendas de uma pizzaria, incluindo controle de clie
    cd pizzaria-system 
 
 ## Configuração do ambiente de DEV
+   1. Baixar as ferramentas necessárias:
+      * Node.js 16+
+      * Python 3.9+
+      * PostgreSQL
+      * DBeaver
+
+   2. Configuração completa do backend
+      * Acessar pasta /backend
+      * Rodar os seguintes comandos no Windows: 
+         - python -m venv venv
+         - venv\Scripts\activate
+         - pip install flask flask-cors flask-sqlalchemy psycopg2-binary
+         - pip freeze > requirements.txt
+         - pip install -r requirements.txt
+         - python run.py (Inicialização do servidor Python)
+
+   3. Configuração completa do frontend
+      * Acessar pasta /business-management-system
+      * Rodar os seguintes comandos no Windows:
+         - npx create-react-app frontend --
+         - Acessar pasta /frontend
+         - npm install
+         - npm install -D tailwindcss postcss autoprefixer
+         - npx tailwindcss init
+         - npm start
+         - npm init -y
+         - npm install axios
+         - npm install react-scripts --save
+         - npm start (Inicialização do servidor React)
+
+
+   4. Conexão entre backend e frontend
+      * 
+
+
+   5. Desativação do ambiente virtual
+      * deactivate 
+
 
 ## Configuração do back-end
 
