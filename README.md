@@ -71,17 +71,16 @@ Um sistema web para gerenciar vendas de uma pizzaria, incluindo controle de clie
          - node -v                                           # Verifica a versão do Node.js
          - npm -v                                            # Verifica a versão do NPM
          - npx create-react-app frontend                     # Cria a pasta /front-end
-         -npm install
+         - npm install                                       # Instala o npm
          - npm install -D tailwindcss postcss autoprefixer   # Instala o Tailwind CSS
          - npx tailwindcss init -p                           # Instala o Tailwind CSS
+         - npm install web-vitals                            # Instala o Web Vitals
+         - npm install axios                                 # Instala o Axios
          - tailwind.config.js                                # Configura Tailwind CSS diretamente no arquivo .js
          - src/index.css                                     # Configura CSS diretamento no arquivo .css
          - src/App.js                                        # Testa Tailwind diretamente no arquivo .js
-         - npm start 
-         - npm init -y
-         - npm install axios
-         - npm install react-scripts --save
-         - npm start (Inicialização do servidor React)
+         - npm init -y                                       # Descreve as versões de todas as dependências instaladas
+         - npm start --> Inicialização do servidor de React
 
 
    4. Conexão entre backend e frontend
