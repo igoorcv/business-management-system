@@ -48,7 +48,7 @@ Um sistema web para gerenciar vendas de uma pizzaria, incluindo controle de clie
       * npm         --> v11.13.0
       * Python 3.9+ --> 
       * PostgreSQL
-      *  DBeaver
+      * DBeaver
 
    2. Configuração completa do backend
       * Acessar terminal via VS Code
@@ -68,23 +68,38 @@ Um sistema web para gerenciar vendas de uma pizzaria, incluindo controle de clie
       * Rodar comando:
         cd C:\Workspace\business-management-system\
       * Rodar os seguintes comandos no Terminal VS Code:
-         - node -v                                           # Verifica a versão do Node.js
-         - npm -v                                            # Verifica a versão do NPM
-         - npx create-react-app frontend                     # Cria a pasta /front-end
-         - cd C:\Workspace\business-management-system\frontend\
-         - npm install                                       # Instala o npm
-         - npm install -D tailwindcss@3 postcss autoprefixer # Instala o Tailwind CSS
-         - npx tailwindcss init -p                           # Instala o Tailwind CSS
-         - npm install web-vitals                            # Instala o Web Vitals
-         - npm install axios                                 # Instala o Axios
-         - tailwind.config.js                                # Configura Tailwind CSS diretamente no arquivo .js
-         - src/index.css                                     # Configura CSS diretamento no arquivo .css
-         - src/App.js                                        # Testa Tailwind diretamente no arquivo .js
-         - npm init -y                                       # Descreve as versões de todas as dependências instaladas
-         - npm start --> Inicialização do servidor de React
+         - ✅ node -v                                           # Verifica a versão do Node.js
+         - ✅ npm -v                                            # Verifica a versão do NPM
+         - ✅ npx create-react-app frontend                     # Cria a pasta /front-end
+         - ✅ cd C:\Workspace\business-management-system\frontend\
+         - ✅ npm install                                       # Instala o npm
+         - ✅ npm install -D tailwindcss@3 postcss autoprefixer # Instala o Tailwind CSS
+         - ✅ npx tailwindcss init -p                           # Instala o Tailwind CSS
+         - ✅ npm install web-vitals                            # Instala o Web Vitals
+         - ✅ npm install axios                                 # Instala o Axios
+         - ✅ tailwind.config.js                                # Configura Tailwind CSS diretamente no arquivo .js
+         - ✅ src/index.css                                     # Configura CSS diretamento no arquivo .css
+         - ✅ src/App.js                                        # Testa Tailwind diretamente no arquivo .js
+         - ✅ npm init -y                                       # Descreve as versões de todas as dependências instaladas
+         - ✅ npm start --> Inicialização do servidor de React
 
+   4. Configuração completa do database
+      * ✅ Acessar o DBeaver
+      * ✅ Criar conexão com PostgreSQL
+      * ✅ Salvar credenciais da conexão: Host, port, username, password
+      * ✅ Habilitar flag na conexão criada: Exibir todos os bancos de dados
+      * ✅ Criar banco de dados
+      * Configurar flask para utilizar o banco de dados:
+         - ✅ Acessar o VS Code
+         - ✅ \backend\app\__init__.py                          #Configura credenciais SQLALCHEMY_DATABASE_URI e SECRET_KEY 
+         - ✅ \backend\config.py                                #Configura credenciais SQLALCHEMY_DATABASE_URI e SECRET_KEY 
+         - ✅ python run.py --> Inicialização do servidor de Python
+      
+      A partir dessa configuração, o fluxo ideal para criar estruturas no database é:
+      - Flask → SQLAlchemy → PostgreSQL
+      - React → Axios → API Flask
 
-   4. Conexão entre backend e frontend
+   5. Conexão entre backend e frontend
       * 
 
 
