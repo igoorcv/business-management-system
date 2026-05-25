@@ -22,8 +22,9 @@ Um sistema web para gerenciar vendas de uma pizzaria, incluindo controle de clie
 ### Passos
 1. Clone o repositório:
    ```bash
+   cd /c/Workspace
    git clone https://github.com/seu-usuario/pizzaria-system.git
-   cd pizzaria-system 
+
 
 ## Configuração do ambiente de DEV
    1. Baixar as ferramentas necessárias:
