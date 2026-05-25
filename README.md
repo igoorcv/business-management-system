@@ -66,13 +66,14 @@ Um sistema web para gerenciar vendas de uma pizzaria, incluindo controle de clie
    3. Configuração completa do frontend
       * Acessar terminal via VS Code
       * Rodar comando:
-        cd C:\Workspace\business-management-system\frontend\
+        cd C:\Workspace\business-management-system\
       * Rodar os seguintes comandos no Terminal VS Code:
          - node -v                                           # Verifica a versão do Node.js
          - npm -v                                            # Verifica a versão do NPM
          - npx create-react-app frontend                     # Cria a pasta /front-end
+         - cd C:\Workspace\business-management-system\frontend\
          - npm install                                       # Instala o npm
-         - npm install -D tailwindcss postcss autoprefixer   # Instala o Tailwind CSS
+         - npm install -D tailwindcss@3 postcss autoprefixer # Instala o Tailwind CSS
          - npx tailwindcss init -p                           # Instala o Tailwind CSS
          - npm install web-vitals                            # Instala o Web Vitals
          - npm install axios                                 # Instala o Axios
