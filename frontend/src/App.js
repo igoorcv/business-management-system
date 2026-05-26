@@ -40,6 +40,23 @@ function App() {
     }
   };
 
+  // Deleta produto
+  const deleteProduct = async (id) => {
+
+    try {
+
+      await axios.delete(`http://localhost:5000/products/${id}`);
+
+      fetchProducts();
+
+    } catch (error) {
+
+      console.error('Erro ao deletar produto:', error);
+
+    }
+
+  };
+
   // Carrega ao abrir página
   useEffect(() => {
     fetchProducts();
@@ -123,6 +140,13 @@ function App() {
             <p>
               R$ {product.price}
             </p>
+            
+            <button
+              onClick={() => deleteProduct(product.id)}
+              className="bg-red-500 text-white px-3 py-1 mt-2"
+            >
+              Excluir
+            </button>
 
           </div>
 
