@@ -1,57 +1,124 @@
-import { useEffect, useState } from 'react';
-
-import api from './services/api';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 function App() {
 
   const [products, setProducts] = useState([]);
 
-  useEffect(() => {
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [category, setCategory] = useState('');
 
-    loadProducts();
+  // Busca produtos
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/products');
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+    }
+  };
 
-  }, []);
-
-  async function loadProducts() {
-
+  // Cria produto
+  const createProduct = async () => {
     try {
 
-      const response = await api.get('/products');
+      await axios.post('http://localhost:5000/products', {
+        name,
+        price,
+        category
+      });
 
-      setProducts(response.data);
+      setName('');
+      setPrice('');
+      setCategory('');
+
+      fetchProducts();
 
     } catch (error) {
-
-      console.error(error);
-
+      console.error('Erro ao criar produto:', error);
     }
+  };
 
-  }
+  // Carrega ao abrir página
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   return (
-
     <div className="p-10">
 
       <h1 className="text-3xl font-bold mb-6">
         Produtos
       </h1>
 
-      <div className="space-y-4">
+      {/* FORMULÁRIO */}
 
-        {products.map(product => (
+      <div className="mb-6 flex gap-2">
+
+        <input
+          type="text"
+          placeholder="Nome do produto"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="border p-2"
+        />
+
+        <input
+          type="number"
+          placeholder="Preço"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          className="border p-2"
+        />
+
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="border p-2"
+        >
+
+          <option value="">
+            Selecione categoria
+          </option>
+
+          <option value="Pizza">
+            Pizza
+          </option>
+
+          <option value="Bebida">
+            Bebida
+          </option>
+
+          <option value="Sobremesa">
+            Sobremesa
+          </option>
+
+        </select>
+
+        <button
+          onClick={createProduct}
+          className="bg-blue-500 text-white px-4 py-2"
+        >
+          Criar
+        </button>
+
+      </div>
+
+      {/* LISTA */}
+
+      <div>
+
+        {products.map((product) => (
 
           <div
             key={product.id}
-            className="border p-4 rounded"
+            className="border p-4 mb-2"
           >
 
-            <h2 className="text-xl font-semibold">
+            <h2 className="font-bold">
               {product.name}
             </h2>
-
-            <p>
-              Categoria: {product.category}
-            </p>
 
             <p>
               R$ {product.price}
@@ -64,7 +131,6 @@ function App() {
       </div>
 
     </div>
-
   );
 }
 
