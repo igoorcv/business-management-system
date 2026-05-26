@@ -96,8 +96,7 @@ Um sistema web para gerenciar vendas de uma pizzaria, incluindo controle de clie
          - ✅ python run.py --> Inicialização do servidor de Python
       
       A partir dessa configuração, o fluxo ideal para criar estruturas no database é:
-      - Flask → SQLAlchemy → PostgreSQL
-      - React → Axios → API Flask
+      - React → Axios → API Flask → Flask → SQLAlchemy → PostgreSQL
 
    5. Conexão entre backend e frontend
       * 
