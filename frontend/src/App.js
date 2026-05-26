@@ -8,6 +8,7 @@ function App() {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   // Busca produtos
   const fetchProducts = async () => {
@@ -52,6 +53,46 @@ function App() {
     } catch (error) {
 
       console.error('Erro ao deletar produto:', error);
+
+    }
+
+  };
+
+  // Edita produto
+  const editProduct = (product) => {
+
+    setEditingId(product.id);
+
+    setName(product.name);
+    setPrice(product.price);
+    setCategory(product.category);
+
+  };
+
+  const updateProduct = async () => {
+
+    try {
+
+      await axios.put(
+        `http://localhost:5000/products/${editingId}`,
+        {
+          name,
+          price,
+          category
+        }
+      );
+
+      setEditingId(null);
+
+      setName('');
+      setPrice('');
+      setCategory('');
+
+      fetchProducts();
+
+    } catch (error) {
+
+      console.error('Erro ao atualizar produto:', error);
 
     }
 
@@ -114,10 +155,18 @@ function App() {
         </select>
 
         <button
-          onClick={createProduct}
+          onClick={
+            editingId
+              ? updateProduct
+              : createProduct
+          }
           className="bg-blue-500 text-white px-4 py-2"
         >
-          Criar
+          {
+            editingId
+              ? 'Atualizar'
+              : 'Criar'
+          }
         </button>
 
       </div>
@@ -140,7 +189,14 @@ function App() {
             <p>
               R$ {product.price}
             </p>
-            
+
+            <button
+              onClick={() => editProduct(product)}
+              className="bg-yellow-500 text-white px-3 py-1 mt-2 mr-2"
+            >
+              Editar
+            </button>
+
             <button
               onClick={() => deleteProduct(product.id)}
               className="bg-red-500 text-white px-3 py-1 mt-2"
