@@ -43,3 +43,36 @@ def create_product():
         "message": "Produto criado com sucesso!"
     }), 201
     # Obs: React → Flask → SQLAlchemy → PostgreSQL
+
+# Cria método DELETE Product
+@routes.route('/products/<int:id>', methods=['DELETE'])
+def delete_product(id):
+    product = Product.query.get(id)
+
+    if not product:
+        return jsonify({'error': 'Produto não encontrado'}), 404
+
+    db.session.delete(product)
+    db.session.commit()
+
+    return jsonify({'message': 'Produto deletado com sucesso!'})
+
+# Cria método UPDATE Product
+@routes.route('/products/<int:id>', methods=['PUT'])
+def update_product(id):
+    product = Product.query.get(id)
+
+    if not product:
+        return jsonify({'error': 'Produto não encontrado'}), 404
+
+    data = request.json
+
+    product.name = data['name']
+    product.category = data['category']
+    product.price = data['price']
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Produto atualizado com sucesso'
+    })
