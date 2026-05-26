@@ -98,15 +98,11 @@ Um sistema web para gerenciar vendas de uma pizzaria, incluindo controle de clie
       A partir dessa configuração, o fluxo ideal para criar estruturas no database é:
       - React → Axios → API Flask → Flask → SQLAlchemy → PostgreSQL
 
-   5. Conexão entre backend e frontend
-      * 
-
-
-   5. Desativação do ambiente virtual
-      * deactivate 
-
-
-## Configuração do back-end
-
-## Conexão entre back-end e front-end
-
+## Como rodar o projeto no localhost
+   1. Acesse o terminal via VS Code
+   2. Rode: cd C:\Workspace\business-management-system\backend\
+   3. Rode: python run.py
+   4. Abra uma 2ª aba do terminal via VS Code
+   5. Rode: cd C:\Workspace\business-management-system\frontend\
+   6. Rode: npm start
+   Obs: Dessa forma, é inicializado o servidor back-end e o front-end. Além disso, vale a pena abrir o DBeaver e o Postman.
