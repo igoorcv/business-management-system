@@ -35,3 +35,32 @@ class Product(db.Model):
             "category": self.category,
             "price": self.price
         }
+
+class Order(db.Model):
+    __tablename__ = 'orders'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    customer_name = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    total = db.Column(
+        db.Float,
+        default=0
+    )
+
+    status = db.Column(
+        db.String(50),
+        default='pending'
+    )
+
+    def to_dict(self):
+
+        return {
+            'id': self.id,
+            'customer_name': self.customer_name,
+            'total_price': self.total,
+            'status': self.status
+        }

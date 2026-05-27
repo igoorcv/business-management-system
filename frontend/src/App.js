@@ -1,217 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link
+} from 'react-router-dom';
+
+import Products from './pages/Products';
+import Orders from './pages/Orders';
 
 function App() {
 
-  const [products, setProducts] = useState([]);
-
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('');
-  const [editingId, setEditingId] = useState(null);
-
-  // Busca produtos
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/products');
-      setProducts(response.data);
-    } catch (error) {
-      console.error('Erro ao buscar produtos:', error);
-    }
-  };
-
-  // Cria produto
-  const createProduct = async () => {
-    try {
-
-      await axios.post('http://localhost:5000/products', {
-        name,
-        price,
-        category
-      });
-
-      setName('');
-      setPrice('');
-      setCategory('');
-
-      fetchProducts();
-
-    } catch (error) {
-      console.error('Erro ao criar produto:', error);
-    }
-  };
-
-  // Deleta produto
-  const deleteProduct = async (id) => {
-
-    try {
-
-      await axios.delete(`http://localhost:5000/products/${id}`);
-
-      fetchProducts();
-
-    } catch (error) {
-
-      console.error('Erro ao deletar produto:', error);
-
-    }
-
-  };
-
-  // Edita produto
-  const editProduct = (product) => {
-
-    setEditingId(product.id);
-
-    setName(product.name);
-    setPrice(product.price);
-    setCategory(product.category);
-
-  };
-
-  const updateProduct = async () => {
-
-    try {
-
-      await axios.put(
-        `http://localhost:5000/products/${editingId}`,
-        {
-          name,
-          price,
-          category
-        }
-      );
-
-      setEditingId(null);
-
-      setName('');
-      setPrice('');
-      setCategory('');
-
-      fetchProducts();
-
-    } catch (error) {
-
-      console.error('Erro ao atualizar produto:', error);
-
-    }
-
-  };
-
-  // Carrega ao abrir página
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   return (
-    <div className="p-10">
 
-      <h1 className="text-3xl font-bold mb-6">
-        Produtos
-      </h1>
+    <BrowserRouter>
 
-      {/* FORMULÁRIO */}
+      <div className="p-4 bg-gray-100 flex gap-4">
 
-      <div className="mb-6 flex gap-2">
+        <Link to="/products">
+          Produtos
+        </Link>
 
-        <input
-          type="text"
-          placeholder="Nome do produto"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="border p-2"
-        />
-
-        <input
-          type="number"
-          placeholder="Preço"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="border p-2"
-        />
-
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="border p-2"
-        >
-
-          <option value="">
-            Selecione categoria
-          </option>
-
-          <option value="Pizza">
-            Pizza
-          </option>
-
-          <option value="Bebida">
-            Bebida
-          </option>
-
-          <option value="Sobremesa">
-            Sobremesa
-          </option>
-
-        </select>
-
-        <button
-          onClick={
-            editingId
-              ? updateProduct
-              : createProduct
-          }
-          className="bg-blue-500 text-white px-4 py-2"
-        >
-          {
-            editingId
-              ? 'Atualizar'
-              : 'Criar'
-          }
-        </button>
+        <Link to="/orders">
+          Pedidos
+        </Link>
 
       </div>
 
-      {/* LISTA */}
+      <Routes>
 
-      <div>
+        <Route
+          path="/products"
+          element={<Products />}
+        />
 
-        {products.map((product) => (
+        <Route
+          path="/orders"
+          element={<Orders />}
+        />
 
-          <div
-            key={product.id}
-            className="border p-4 mb-2"
-          >
+      </Routes>
 
-            <h2 className="font-bold">
-              {product.name}
-            </h2>
+    </BrowserRouter>
 
-            <p>
-              R$ {product.price}
-            </p>
-
-            <button
-              onClick={() => editProduct(product)}
-              className="bg-yellow-500 text-white px-3 py-1 mt-2 mr-2"
-            >
-              Editar
-            </button>
-
-            <button
-              onClick={() => deleteProduct(product.id)}
-              className="bg-red-500 text-white px-3 py-1 mt-2"
-            >
-              Excluir
-            </button>
-
-          </div>
-
-        ))}
-
-      </div>
-
-    </div>
   );
+
 }
 
 export default App;

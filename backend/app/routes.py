@@ -2,7 +2,7 @@
 
 from flask import Blueprint, jsonify, request
 
-from .models import Product
+from .models import Product, Order
 from . import db
 
 routes = Blueprint('routes', __name__)
@@ -75,4 +75,86 @@ def update_product(id):
 
     return jsonify({
         'message': 'Produto atualizado com sucesso'
+    })
+
+# Cria método GET Orders
+@routes.route('/orders', methods=['GET'])
+def get_orders():
+    orders = Order.query.all()
+
+    output = []
+
+    for order in orders:
+        output.append({
+            'id': order.id,
+            'customer_name': order.customer_name,
+            'total': order.total,
+            'status': order.status
+        })
+
+    return jsonify(output)
+
+# Cria método POST Order
+@routes.route('/orders', methods=['POST'])
+def create_order():
+    data = request.json
+
+    new_order = Order(
+        customer_name=data['customer_name'],
+        total_price = data['total_price'],
+        status = data['status']
+    )
+
+    db.session.add(new_order)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Pedido criado com sucesso'
+    }), 201
+
+# Cria método DELETE Order
+@routes.route('/orders/<int:id>', methods=['DELETE'])
+def delete_order(id):
+
+    order = Order.query.get(id)
+
+    if not order:
+
+        return jsonify({
+            'error': 'Pedido não encontrado'
+        }), 404
+
+    db.session.delete(order)
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Pedido deletado com sucesso'
+    })
+
+# Cria método UPDATE Order
+@routes.route('/orders/<int:id>', methods=['PUT'])
+def update_order(id):
+
+    order = Order.query.get(id)
+
+    if not order:
+
+        return jsonify({
+            'error': 'Pedido não encontrado'
+        }), 404
+
+    data = request.json
+
+    #order.customer_name = data['customer_name']
+    #order.total_price = data['total_price']
+    #order.status = data['status']
+    order.customer_name = data.get('customer_name')
+    order.total_price = data.get('total_price')
+    order.status = data.get('status')
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Pedido atualizado com sucesso'
     })

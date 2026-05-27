@@ -77,6 +77,7 @@ Um sistema web para gerenciar vendas de uma pizzaria, incluindo controle de clie
          - ✅ npx tailwindcss init -p                           # Instala o Tailwind CSS
          - ✅ npm install web-vitals                            # Instala o Web Vitals
          - ✅ npm install axios                                 # Instala o Axios
+         - ✅ npm install react-router-dom                      # instala o router para habilitar múltiplas telas
          - ✅ tailwind.config.js                                # Configura Tailwind CSS diretamente no arquivo .js
          - ✅ src/index.css                                     # Configura CSS diretamento no arquivo .css
          - ✅ src/App.js                                        # Testa Tailwind diretamente no arquivo .js
