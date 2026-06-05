@@ -107,17 +107,20 @@ def get_order(id):
 @routes.route('/orders', methods=['POST'])
 def create_order():
     data = request.json
-
+    
+    print(data)
+    
     new_order = Order(
         customer_name=data['customer_name'],
-        total_price = data['total_price'],
-        status = data['status']
+        total=0,
+        status=data['status']
     )
 
     db.session.add(new_order)
     db.session.commit()
 
     return jsonify({
+        'id': new_order.id,
         'message': 'Pedido criado com sucesso'
     }), 201
 

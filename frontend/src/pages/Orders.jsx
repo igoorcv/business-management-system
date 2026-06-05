@@ -13,6 +13,8 @@ function Orders() {
     const [showModal, setShowModal] = useState(false);
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [products, setProducts] = useState([]);
+    const [selectedProductId, setSelectedProductId] = useState('');
+    const [quantity, setQuantity] = useState(1);
 
     // Busca produtos
     const fetchProducts = async () => {
@@ -22,6 +24,60 @@ function Orders() {
         );
 
         setProducts(response.data);
+    };
+
+    // Adicione produto
+    const addProduct = () => {
+
+        if (!selectedProductId) return;
+
+        const product = products.find(
+            p => p.id === Number(selectedProductId)
+        );
+
+        const existingProduct = selectedProducts.find(
+            p => p.product_id === product.id
+        );
+
+        if (existingProduct) {
+
+            const updated = selectedProducts.map(item =>
+                item.product_id === product.id
+                    ? {
+                        ...item,
+                        quantity: item.quantity + quantity
+                    }
+                    : item
+            );
+
+            setSelectedProducts(updated);
+
+        } else {
+
+            setSelectedProducts([
+                ...selectedProducts,
+                {
+                    product_id: product.id,
+                    product_name: product.name,
+                    unit_price: product.price,
+                    quantity
+                }
+            ]);
+        }
+
+        setSelectedProductId('');
+        setQuantity(1);
+    };
+
+    // Remove produto
+    const removeProduct = (productId) => {
+
+        setSelectedProducts(
+            selectedProducts.filter(
+                item => item.product_id !== productId
+            )
+        );
+
     };
 
     // Busca pedidos
@@ -56,7 +112,7 @@ function Orders() {
                 status: status
             });
 
-            await axios.post(
+            const orderResponse = await axios.post(
                 'http://localhost:5000/orders',
                 {
                     customer_name: customerName,
@@ -64,12 +120,27 @@ function Orders() {
                 }
             );
 
+            const orderId = orderResponse.data.id;
+
+            for (const item of selectedProducts) {
+
+                await axios.post(
+                    'http://localhost:5000/order-items',
+                    {
+                        order_id: orderId,
+                        product_id: item.product_id,
+                        quantity: item.quantity
+                    }
+                );
+            }
+
             setCustomerName('');
             setStatus('Pendente');
+            setSelectedProducts([]);
+            
+            setShowModal(false);
 
             fetchOrders();
-
-            setShowModal(false);
 
         } catch (error) {
 
@@ -80,10 +151,7 @@ function Orders() {
 
         }
 
-    };
-
-    // Cria items do pedido
-    
+    };    
 
     // Deleta pedido
     const deleteOrder = async (id) => {
@@ -167,6 +235,16 @@ function Orders() {
         fetchProducts();
     }, []);
 
+    const orderTotal = selectedProducts.reduce(
+        (total, item) =>
+            total + (item.unit_price * item.quantity),
+        0
+    );
+
+    const isFormValid =
+        customerName.trim() !== '' &&
+        selectedProducts.length > 0;
+
     return (
 
         <div className="p-10">
@@ -249,7 +327,7 @@ function Orders() {
 
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
 
-                        <div className="bg-white p-6 rounded-lg w-[450px] shadow-lg">
+                        <div className="bg-white rounded-lg shadow-lg w-[1100px] max-w-[95vw] p-6">
 
                             <h2 className="text-xl font-bold mb-4">
 
@@ -269,35 +347,202 @@ function Orders() {
                                 className="border p-2 w-full mb-3"
                             />
 
-                            <select
-                                onChange={(e) => {
+                            <div className="border rounded p-3 mb-4">
 
-                                    const productId = Number(e.target.value);
+                                <h3 className="font-bold mb-3">
+                                    Produtos
+                                </h3>
 
-                                    if (!productId) return;
+                                <div className="flex gap-2 mb-4">
 
-                                    setSelectedProducts([
-                                        ...selectedProducts,
-                                        {
-                                            product_id: productId,
-                                            quantity: 1
+                                    <select
+                                        value={selectedProductId}
+                                        onChange={(e) =>
+                                            setSelectedProductId(e.target.value)
                                         }
-                                    ]);
-                                }}
-                            >
-                                <option value="">
-                                    Selecione um produto
-                                </option>
-
-                                {products.map(product => (
-                                    <option
-                                        key={product.id}
-                                        value={product.id}
+                                        className="border p-2 flex-1"
                                     >
-                                        {product.name}
-                                    </option>
-                                ))}
-                            </select>
+                                        <option value="">
+                                            Selecione um produto
+                                        </option>
+
+                                        {products.map(product => (
+
+                                            <option
+                                                key={product.id}
+                                                value={product.id}
+                                            >
+                                                {product.name}
+                                            </option>
+
+                                        ))}
+
+                                    </select>
+
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={quantity}
+                                        onChange={(e) =>
+                                            setQuantity(Number(e.target.value))
+                                        }
+                                        className="border p-2 w-24"
+                                    />
+
+                                    <button
+                                        onClick={addProduct}
+                                        className="bg-blue-500 text-white px-4"
+                                    >
+                                        Adicionar
+                                    </button>
+
+                                </div>
+
+                                {selectedProducts.length > 0 && (
+
+                                    <table className="w-full border">
+
+                                        <thead>
+
+                                            <tr className="bg-gray-100">
+
+                                                <th className="p-2 text-left">
+                                                    Produto
+                                                </th>
+
+                                                <th className="p-2">
+                                                    Qtde
+                                                </th>
+
+                                                <th className="p-2">
+                                                    Unitário
+                                                </th>
+
+                                                <th className="p-2">
+                                                    Subtotal
+                                                </th>
+
+                                                <th className="p-2">
+                                                    Ações
+                                                </th>
+
+                                            </tr>
+
+                                        </thead>
+
+                                        <tbody>
+
+                                            {selectedProducts.map(item => (
+
+                                                <tr
+                                                    key={item.product_id}
+                                                    className="border-t"
+                                                >
+
+                                                    <td className="p-2">
+                                                        {item.product_name}
+                                                    </td>
+
+                                                    <td className="p-2 text-center">
+
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            value={item.quantity}
+                                                            onChange={(e) => {
+
+                                                                const updated =
+                                                                    selectedProducts.map(prod =>
+                                                                        prod.product_id === item.product_id
+                                                                            ? {
+                                                                                ...prod,
+                                                                                quantity: Number(e.target.value)
+                                                                            }
+                                                                            : prod
+                                                                    );
+
+                                                                setSelectedProducts(updated);
+                                                            }}
+                                                            className="border w-20 text-center"
+                                                        />
+
+                                                    </td>
+
+                                                    <td className="p-2 text-center">
+                                                        R$ {item.unit_price.toFixed(2)}
+                                                    </td>
+
+                                                    <td className="p-2 text-center">
+                                                        R$ {(item.unit_price * item.quantity).toFixed(2)}
+                                                    </td>
+
+                                                    <td className="p-2 text-center">
+
+                                                        <button
+                                                            onClick={() =>
+                                                                removeProduct(item.product_id)
+                                                            }
+                                                            className="bg-red-500 text-white px-2 py-1 rounded"
+                                                        >
+                                                            X
+                                                        </button>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            ))}
+
+                                        </tbody>
+
+                                    </table>
+
+                                )}
+
+                                <div className="text-right mt-4 font-bold text-lg">
+
+                                    Total: R$ {orderTotal.toFixed(2)}
+
+                                </div>
+
+                            </div>
+
+                            {selectedProducts.map((item, index) => {
+
+                                const product = products.find(
+                                    p => p.id === item.product_id
+                                );
+
+                                return (
+
+                                    <div
+                                        key={index}
+                                        className="flex gap-2 mt-2"
+                                    >
+
+                                        <span>
+                                            {product?.name}
+                                        </span>
+
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={item.quantity}
+                                            onChange={(e) => {
+
+                                                const updated = [...selectedProducts];
+
+                                                updated[index].quantity =
+                                                    Number(e.target.value);
+
+                                                setSelectedProducts(updated);
+                                            }}
+                                        />
+
+                                    </div>
+
+                                );
+                            })}
 
                             <select
                                 value={status}
@@ -348,7 +593,12 @@ function Orders() {
                                         setShowModal(false);
 
                                     }}
-                                    className="bg-green-500 text-white px-4 py-2 rounded"
+                                    disabled={!isFormValid}
+                                    className={`px-4 py-2 rounded text-white ${
+                                        isFormValid
+                                            ? 'bg-green-500 hover:bg-green-600'
+                                            : 'bg-gray-400 cursor-not-allowed'
+                                    }`}
                                 >
                                     {
                                         editingId
