@@ -2,7 +2,7 @@
 
 from flask import Blueprint, jsonify, request
 
-from .models import Product, Order
+from .models import Product, Order, Client, OrderItem
 from . import db
 
 routes = Blueprint('routes', __name__)
@@ -158,3 +158,47 @@ def update_order(id):
     return jsonify({
         'message': 'Pedido atualizado com sucesso'
     })
+
+# Cria método GET Order-Items
+@routes.route('/order-items', methods=['GET'])
+def get_order_items():
+
+    items = OrderItem.query.all()
+
+    return jsonify([
+        item.to_dict()
+        for item in items
+    ])
+
+# Cria método POST OrderItem
+@routes.route('/order-items', methods=['POST'])
+def create_order_item():
+
+    data = request.get_json()
+
+    item = OrderItem(
+        order_id=data['order_id'],
+        product_id=data['product_id'],
+        quantity=data['quantity']
+    )
+
+    db.session.add(item)
+    db.session.commit()
+
+    return jsonify(item.to_dict()), 201
+
+# Cria método DELETE OrderItem
+@routes.route('/order-items/<int:id>', methods=['DELETE'])
+def delete_order_item(id):
+
+    item = OrderItem.query.get_or_404(id)
+
+    db.session.delete(item)
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Item removido'
+    })
+
+# Cria método UPDATE OrderItem

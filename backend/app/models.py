@@ -2,7 +2,7 @@
 
 from . import db
 
-class Cliente(db.Model):
+class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     telefone = db.Column(db.String(20))
@@ -63,4 +63,40 @@ class Order(db.Model):
             'customer_name': self.customer_name,
             'total_price': self.total,
             'status': self.status
+        }
+    
+class OrderItem(db.Model):
+
+    __tablename__ = 'order_items'
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    order_id = db.Column(
+        db.Integer,
+        db.ForeignKey('orders.id'),
+        nullable=False
+    )
+
+    product_id = db.Column(
+        db.Integer,
+        db.ForeignKey('products.id'),
+        nullable=False
+    )
+
+    quantity = db.Column(
+        db.Integer,
+        nullable=False,
+        default=1
+    )
+
+    def to_dict(self):
+
+        return {
+            'id': self.id,
+            'order_id': self.order_id,
+            'product_id': self.product_id,
+            'quantity': self.quantity
         }
