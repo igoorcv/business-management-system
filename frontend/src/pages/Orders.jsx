@@ -8,10 +8,21 @@ function Orders() {
     const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [customerName, setCustomerName] = useState('');
-    //const [totalPrice, setTotalPrice] = useState('');
     const [status, setStatus] = useState('Pendente');
-
     const [editingId, setEditingId] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedProducts, setSelectedProducts] = useState([]);
+    const [products, setProducts] = useState([]);
+
+    // Busca produtos
+    const fetchProducts = async () => {
+
+        const response = await axios.get(
+            'http://localhost:5000/products'
+        );
+
+        setProducts(response.data);
+    };
 
     // Busca pedidos
     const fetchOrders = async () => {
@@ -42,7 +53,6 @@ function Orders() {
 
             console.log({
                 customer_name: customerName,
-                //total_price: totalPrice,
                 status: status
             });
 
@@ -50,16 +60,16 @@ function Orders() {
                 'http://localhost:5000/orders',
                 {
                     customer_name: customerName,
-                    //total_price: totalPrice,
                     status: status
                 }
             );
 
             setCustomerName('');
-            //setTotalPrice('');
             setStatus('Pendente');
 
             fetchOrders();
+
+            setShowModal(false);
 
         } catch (error) {
 
@@ -71,6 +81,9 @@ function Orders() {
         }
 
     };
+
+    // Cria items do pedido
+    
 
     // Deleta pedido
     const deleteOrder = async (id) => {
@@ -103,9 +116,9 @@ function Orders() {
 
         setCustomerName(order.customer_name || '');
 
-        //setTotalPrice(order.total_price || '');
-
         setStatus(order.status || 'Pendente');
+
+        setShowModal(true);
 
     };
 
@@ -135,8 +148,8 @@ function Orders() {
             setEditingId(null);
 
             setCustomerName('');
-            //setTotalPrice('');
             setStatus('Pendente');
+            setShowModal(false);
 
         } catch (error) {
 
@@ -150,9 +163,8 @@ function Orders() {
     };
 
     useEffect(() => {
-
         fetchOrders();
-
+        fetchProducts();
     }, []);
 
     return (
@@ -163,64 +175,25 @@ function Orders() {
                 Pedidos
             </h1>
 
-            {/* FORMULÁRIO */}
-
-            <div className="flex gap-2 mb-6">
-
-                <input
-                    type="text"
-                    placeholder="Nome do cliente"
-                    value={customerName}
-                    onChange={(e) =>
-                        setCustomerName(e.target.value)
-                    }
-                    className="border p-2"
-                />
-
-                <select
-                    value={status}
-                    onChange={(e) =>
-                        setStatus(e.target.value)
-                    }
-                    className="border p-2"
-                >
-
-                    <option value="Pendente">
-                        Pendente
-                    </option>
-
-                    <option value="Em preparo">
-                        Em preparo
-                    </option>
-
-                    <option value="Saiu para entrega">
-                        Saiu para entrega
-                    </option>
-
-                    <option value="Entregue">
-                        Entregue
-                    </option>
-
-                </select>
+            {/* BOTÕES NO HEADER */}
+            <div className="mb-6">
 
                 <button
-                    onClick={
-                        editingId
-                            ? updateOrder
-                            : createOrder
-                    }
-                    className="bg-green-500 text-white px-4 py-2"
+                    onClick={() => {
+                        setEditingId(null);
+                        setCustomerName('');
+                        setStatus('Pendente');
+                        setShowModal(true);
+                    }}
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
                 >
-                    {
-                        editingId
-                            ? 'Atualizar Pedido'
-                            : 'Criar Pedido'
-                    }
+                    Novo Pedido
                 </button>
+
 
             </div>
 
-            {/* LISTA */}
+            {/* GRID */}
 
             <div>
 
@@ -236,7 +209,7 @@ function Orders() {
                         </h2>
 
                         <p>
-                            Total: R$ {order.total?.toFixed(2)}
+                            Total: R$ {order.total_price?.toFixed(2)}
                         </p>
 
                         <p>
@@ -254,7 +227,7 @@ function Orders() {
                              onClick={() => navigate(`/orders/${order.id}`)}
                             className="bg-blue-500 text-white px-3 py-1 mt-2 mr-2"
                         >
-                        Ver Itens
+                            Ver Itens
                         </button>
 
                         <button
@@ -269,6 +242,129 @@ function Orders() {
                 ))}
 
             </div>
+
+            {/* MODAL */}
+            {
+                showModal && (
+
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+
+                        <div className="bg-white p-6 rounded-lg w-[450px] shadow-lg">
+
+                            <h2 className="text-xl font-bold mb-4">
+
+                                {editingId
+                                    ? 'Editar Pedido'
+                                    : 'Novo Pedido'}
+
+                            </h2>
+                            
+                            <input
+                                type="text"
+                                placeholder="Nome do cliente"
+                                value={customerName}
+                                onChange={(e) =>
+                                    setCustomerName(e.target.value)
+                                }
+                                className="border p-2 w-full mb-3"
+                            />
+
+                            <select
+                                onChange={(e) => {
+
+                                    const productId = Number(e.target.value);
+
+                                    if (!productId) return;
+
+                                    setSelectedProducts([
+                                        ...selectedProducts,
+                                        {
+                                            product_id: productId,
+                                            quantity: 1
+                                        }
+                                    ]);
+                                }}
+                            >
+                                <option value="">
+                                    Selecione um produto
+                                </option>
+
+                                {products.map(product => (
+                                    <option
+                                        key={product.id}
+                                        value={product.id}
+                                    >
+                                        {product.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={status}
+                                onChange={(e) =>
+                                    setStatus(e.target.value)
+                                }
+                                className="border p-2 w-full mb-4"
+                            >
+                                <option value="Pendente">
+                                    Pendente
+                                </option>
+
+                                <option value="Em preparo">
+                                    Em preparo
+                                </option>
+
+                                <option value="Saiu para entrega">
+                                    Saiu para entrega
+                                </option>
+
+                                <option value="Entregue">
+                                    Entregue
+                                </option>
+
+                            </select>
+
+                            <div className="flex justify-end gap-2">
+
+                                <button
+                                    onClick={() => {
+                                        setShowModal(false);
+                                        setEditingId(null);
+                                    }}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                                >
+                                    Cancelar
+                                </button>
+
+                                <button
+                                    onClick={() => {
+
+                                        if (editingId) {
+                                            updateOrder();
+                                        } else {
+                                            createOrder();
+                                        }
+
+                                        setShowModal(false);
+
+                                    }}
+                                    className="bg-green-500 text-white px-4 py-2 rounded"
+                                >
+                                    {
+                                        editingId
+                                            ? 'Atualizar'
+                                            : 'Criar'
+                                    }
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )
+            }
 
         </div>
 

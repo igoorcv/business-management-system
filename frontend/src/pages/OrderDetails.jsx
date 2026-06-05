@@ -39,7 +39,7 @@ function OrderDetails() {
                 </thead>
 
                 <tbody>
-                    {order.items.map(item => (
+                    {order.items?.map(item => (
                         <tr key={item.id}>
                             <td>{item.product_name}</td>
                             <td>{item.quantity}</td>
