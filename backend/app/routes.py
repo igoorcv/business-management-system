@@ -80,19 +80,28 @@ def update_product(id):
 # Cria método GET Orders
 @routes.route('/orders', methods=['GET'])
 def get_orders():
+
     orders = Order.query.all()
 
     output = []
 
     for order in orders:
-        output.append({
-            'id': order.id,
-            'customer_name': order.customer_name,
-            'total': order.total,
-            'status': order.status
-        })
+        output.append(order.to_dict())
 
     return jsonify(output)
+
+# Cria método GET Order
+@routes.route('/orders/<int:id>', methods=['GET'])
+def get_order(id):
+
+    order = db.session.get(Order, id)
+
+    if not order:
+        return jsonify({
+            'message': 'Pedido não encontrado'
+        }), 404
+
+    return jsonify(order.to_dict())
 
 # Cria método POST Order
 @routes.route('/orders', methods=['POST'])
@@ -183,6 +192,12 @@ def create_order_item():
     )
 
     db.session.add(item)
+    db.session.commit()
+    
+    order = Order.query.get(item.order_id)
+
+    order.calculate_total()
+
     db.session.commit()
 
     return jsonify(item.to_dict()), 201

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
 
 function Orders() {
 
+    const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
-
     const [customerName, setCustomerName] = useState('');
-    const [totalPrice, setTotalPrice] = useState('');
+    //const [totalPrice, setTotalPrice] = useState('');
     const [status, setStatus] = useState('Pendente');
 
     const [editingId, setEditingId] = useState(null);
@@ -40,7 +42,7 @@ function Orders() {
 
             console.log({
                 customer_name: customerName,
-                total_price: totalPrice,
+                //total_price: totalPrice,
                 status: status
             });
 
@@ -48,13 +50,13 @@ function Orders() {
                 'http://localhost:5000/orders',
                 {
                     customer_name: customerName,
-                    total_price: totalPrice,
+                    //total_price: totalPrice,
                     status: status
                 }
             );
 
             setCustomerName('');
-            setTotalPrice('');
+            //setTotalPrice('');
             setStatus('Pendente');
 
             fetchOrders();
@@ -101,7 +103,7 @@ function Orders() {
 
         setCustomerName(order.customer_name || '');
 
-        setTotalPrice(order.total_price || '');
+        //setTotalPrice(order.total_price || '');
 
         setStatus(order.status || 'Pendente');
 
@@ -113,7 +115,7 @@ function Orders() {
 
         console.log({
             customer_name: customerName,
-            total_price: totalPrice,
+            //total_price: totalPrice,
             status: status
         });
 
@@ -123,7 +125,7 @@ function Orders() {
                 `http://localhost:5000/orders/${editingId}`,
                 {
                     customer_name: customerName,
-                    total_price: totalPrice,
+                    //total_price: totalPrice,
                     status: status
                 }
             );
@@ -133,7 +135,7 @@ function Orders() {
             setEditingId(null);
 
             setCustomerName('');
-            setTotalPrice('');
+            //setTotalPrice('');
             setStatus('Pendente');
 
         } catch (error) {
@@ -171,16 +173,6 @@ function Orders() {
                     value={customerName}
                     onChange={(e) =>
                         setCustomerName(e.target.value)
-                    }
-                    className="border p-2"
-                />
-
-                <input
-                    type="number"
-                    placeholder="Valor total"
-                    value={totalPrice}
-                    onChange={(e) =>
-                        setTotalPrice(e.target.value || '')
                     }
                     className="border p-2"
                 />
@@ -244,7 +236,7 @@ function Orders() {
                         </h2>
 
                         <p>
-                            Total: R$ {order.total_price}
+                            Total: R$ {order.total?.toFixed(2)}
                         </p>
 
                         <p>
@@ -256,6 +248,13 @@ function Orders() {
                             className="bg-yellow-500 text-white px-3 py-1 mt-2 mr-2"
                         >
                             Editar
+                        </button>
+
+                        <button
+                             onClick={() => navigate(`/orders/${order.id}`)}
+                            className="bg-blue-500 text-white px-3 py-1 mt-2 mr-2"
+                        >
+                        Ver Itens
                         </button>
 
                         <button

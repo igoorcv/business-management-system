@@ -55,6 +55,22 @@ class Order(db.Model):
         db.String(50),
         default='pending'
     )
+    
+    items = db.relationship(
+        'OrderItem',
+        backref='order',
+        lazy=True
+    )
+
+    def calculate_total(self):
+
+        total = 0
+
+        for item in self.items:
+
+            total += item.product.price * item.quantity
+
+        self.total = total
 
     def to_dict(self):
 
@@ -62,9 +78,13 @@ class Order(db.Model):
             'id': self.id,
             'customer_name': self.customer_name,
             'total_price': self.total,
-            'status': self.status
+            'status': self.status,
+            'items': [
+                item.to_dict()
+                for item in self.items
+            ]
         }
-    
+ 
 class OrderItem(db.Model):
 
     __tablename__ = 'order_items'
@@ -92,11 +112,18 @@ class OrderItem(db.Model):
         default=1
     )
 
+    product = db.relationship(
+        'Product',
+        backref='order_items'
+    )
+
     def to_dict(self):
 
         return {
             'id': self.id,
             'order_id': self.order_id,
             'product_id': self.product_id,
+            'product_name': self.product.name if self.product else '',
+            'product_price': self.product.price if self.product else '',
             'quantity': self.quantity
         }

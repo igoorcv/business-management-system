@@ -7,6 +7,7 @@ import {
 
 import Products from './pages/Products';
 import Orders from './pages/Orders';
+import OrderDetails from "./pages/OrderDetails";
 
 function App() {
 
@@ -36,6 +37,11 @@ function App() {
         <Route
           path="/orders"
           element={<Orders />}
+        />
+
+        <Route 
+          path="/orders/:id"
+          element={<OrderDetails />} 
         />
 
       </Routes>
