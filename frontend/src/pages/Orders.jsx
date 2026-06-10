@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Select from 'react-select';
+import { useEffect, useRef } from 'react';
 
 
 function Orders() {
@@ -24,6 +26,9 @@ function Orders() {
 
     const [clientId, setClientId] = useState(null);
     const [clientFound, setClientFound] = useState(false);
+
+    const [productSearch, setProductSearch] = useState('');
+    const [showProductDropdown, setShowProductDropdown] = useState(false);
 
 
     // Busca produtos
@@ -373,7 +378,48 @@ function Orders() {
         "border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500";
 
     const selectClass =
-        "border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500";
+        "border border-gray-300 rounded-md px-3 py-2 pr-12 w-full bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-400";
+
+    const quantityOptions = [
+        { value: 1/3, label: '⅓' },
+        { value: 1/2, label: '½' },
+
+        ...Array.from(
+            { length: 500 },
+            (_, i) => ({
+                value: i + 1,
+                label: String(i + 1)
+            })
+        )
+    ];
+
+    const filteredProducts = products.filter(product =>
+        product.name
+            .toLowerCase()
+            .includes(productSearch.toLowerCase())
+    );
+
+    const productRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (
+                productRef.current &&
+                !productRef.current.contains(event.target)
+            ) {
+                setShowProductDropdown(false);
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            document.removeEventListener(
+                'mousedown',
+                handleClickOutside
+            );
+        };
+    }, []);
 
     // FRONT-END
     return (
@@ -462,8 +508,8 @@ function Orders() {
                             <h2 className="text-xl font-bold mb-4">
 
                                 {editingId
-                                    ? 'Editar Pedido'
-                                    : 'Novo Pedido'}
+                                    ? 'Edição de pedido'
+                                    : 'Criação de pedido'}
 
                             </h2>
                             
@@ -605,55 +651,104 @@ function Orders() {
 
                             </div>
                             
-                            
-                            <div className="border rounded p-3 mb-4">
+                            {/* Informações do pedido */}
+                            <div className="border rounded-lg p-4 mb-4">
 
-                                <h3 className="font-bold mb-3">
-                                    Produtos
+                                <h3 className="font-semibold mb-3">
+                                    Informações do pedido
                                 </h3>
+                                
+                                {/* Campos */}
+                                <div className="grid grid-cols-12 gap-4 mb-4">
 
-                                <div className="flex gap-2 mb-4">
-
-                                    <select
-                                        value={selectedProductId}
-                                        onChange={(e) =>
-                                            setSelectedProductId(e.target.value)
-                                        }
-                                        className="border p-2 flex-1"
-                                    >
-                                        <option value="">
-                                            Selecione um produto
-                                        </option>
-
-                                        {products.map(product => (
-
-                                            <option
-                                                key={product.id}
-                                                value={product.id}
-                                            >
-                                                {product.name}
+                                    <div className="col-span-7">
+                                        <select
+                                            value={selectedProductId}
+                                            onChange={(e) =>
+                                                setSelectedProductId(e.target.value)
+                                            }
+                                            className={`${selectClass} ${
+                                                selectedProductId ? 'text-black' : 'text-gray-400'
+                                            }`}
+                                        >
+                                            <option value="">
+                                                Selecione um produto
                                             </option>
 
-                                        ))}
+                                            {products.map(product => (
+                                                <option
+                                                    key={product.id}
+                                                    value={product.id}
+                                                    className="text-black"
+                                                >
+                                                    {product.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                                    </select>
+                                    <div className="col-span-2">
+                                        <Select
+                                            options={quantityOptions}
+                                            value={
+                                                quantityOptions.find(
+                                                    option => option.value === quantity
+                                                )
+                                            }
+                                            onChange={(selected) =>
+                                                setQuantity(selected?.value)
+                                            }
+                                            placeholder="Qtd."
+                                            isSearchable
+                                            styles={{
+                                                control: (provided) => ({
+                                                    ...provided,
+                                                    minHeight: '42px',
+                                                    height: '42px',
+                                                    borderColor: '#E9D5FF',
+                                                    borderRadius: '0.375rem',
+                                                    boxShadow: 'none',
+                                                }),
 
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={quantity}
-                                        onChange={(e) =>
-                                            setQuantity(Number(e.target.value))
-                                        }
-                                        className="border p-2 w-24"
-                                    />
+                                                valueContainer: (provided) => ({
+                                                    ...provided,
+                                                    height: '42px',
+                                                    padding: '0 12px',
+                                                }),
 
-                                    <button
-                                        onClick={addProduct}
-                                        className="bg-blue-500 text-white px-4"
-                                    >
-                                        Adicionar
-                                    </button>
+                                                input: (provided) => ({
+                                                    ...provided,
+                                                    margin: '0px',
+                                                    padding: '0px',
+                                                }),
+
+                                                indicatorsContainer: (provided) => ({
+                                                    ...provided,
+                                                    height: '42px',
+                                                }),
+
+                                                option: (provided, state) => ({
+                                                    ...provided,
+                                                    backgroundColor: state.isFocused
+                                                        ? '#E9D5FF' // bg-purple-200
+                                                        : 'white',
+                                                    //color: 'black'
+                                                    color: state.isSelected
+                                                            ? 'black'
+                                                            : '#6B21A8', // bg-purple-800
+                                                }),
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="col-span-3">
+                                        <button
+                                            onClick={addProduct}
+                                            className="w-full h-full bg-purple-600 text-white rounded-md hover:bg-purple-800"
+                                        >
+                                            + Adicionar item
+                                        </button>
+                                    </div>
 
                                 </div>
 
