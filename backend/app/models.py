@@ -1,12 +1,34 @@
 # Criação da estrutura do Database
 
 from . import db
-
+ 
 class Client(db.Model):
+    __tablename__ = 'clients'
+
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    telefone = db.Column(db.String(20))
-    email = db.Column(db.String(100))
+
+    nome = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    telefone = db.Column(
+        db.String(20),
+        unique=True,
+        nullable=False
+    )
+
+    endereco = db.Column(
+        db.String(200)
+    )
+
+    complemento = db.Column(
+        db.String(100)
+    )
+
+    bairro = db.Column(
+        db.String(100)
+    )
 
 class Product(db.Model):
     __tablename__ = 'products'
@@ -41,9 +63,30 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
+    order_type = db.Column(
+        db.String(20),
+        default='balcao'
+    )
+    
+    client_id = db.Column(
+        db.Integer,
+        db.ForeignKey('clients.id'),
+        nullable=True
+    )
+    
+    client = db.relationship(
+        'Client',
+        backref='orders'
+    )
+    
     customer_name = db.Column(
         db.String(100),
         nullable=False
+    )
+    
+    phone = db.Column(
+        db.String(20),
+        nullable=True
     )
 
     total = db.Column(
@@ -76,7 +119,18 @@ class Order(db.Model):
 
         return {
             'id': self.id,
-            'customer_name': self.customer_name,
+            'customer_name': (
+                self.client.nome
+                if self.client
+                else self.customer_name
+            ),
+            'phone': (
+                self.client.telefone
+                if self.client
+                else self.phone
+            ),
+            'client_id': self.client_id,
+            'order_type': self.order_type,
             'total_price': self.total,
             'status': self.status,
             'items': [

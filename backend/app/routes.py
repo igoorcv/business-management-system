@@ -111,7 +111,10 @@ def create_order():
     print(data)
     
     new_order = Order(
+        client_id=data['client_id'],
+        order_type=data['order_type'],
         customer_name=data['customer_name'],
+        phone=data.get('phone'),
         total=0,
         status=data['status']
     )
@@ -219,4 +222,50 @@ def delete_order_item(id):
         'message': 'Item removido'
     })
 
-# Cria método UPDATE OrderItem
+# Cria método POST Client
+@routes.route('/clients', methods=['POST'])
+def create_client():
+
+    data = request.get_json()
+
+    client = Client(
+        nome=data['nome'],
+        telefone=data['telefone'],
+        endereco=data.get('endereco'),
+        complemento=data.get('complemento'),
+        bairro=data.get('bairro')
+    )
+
+    db.session.add(client)
+    db.session.commit()
+
+    return jsonify({
+        'id': client.id
+    }), 201
+
+# Cria método GET Client by Phone
+@routes.route('/clients/search')
+def search_client():
+
+    phone = request.args.get('phone')
+
+    client = Client.query.filter_by(
+        telefone=phone
+    ).first()
+
+    if not client:
+        return jsonify(None)
+
+    return jsonify({
+        'id': client.id,
+        'nome': client.nome,
+        'telefone': client.telefone,
+        'endereco': client.endereco,
+        'complemento': client.complemento,
+        'bairro': client.bairro
+    })
+
+# Cria método UPDATE Client
+
+
+# Cria método DELETE Client

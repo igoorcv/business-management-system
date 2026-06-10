@@ -15,6 +15,16 @@ function Orders() {
     const [products, setProducts] = useState([]);
     const [selectedProductId, setSelectedProductId] = useState('');
     const [quantity, setQuantity] = useState(1);
+    const [orderType, setOrderType] = useState('balcao');
+
+    const [phone, setPhone] = useState('');
+    const [address, setAddress] = useState('');
+    const [complement, setComplement] = useState('');
+    const [district, setDistrict] = useState('');
+
+    const [clientId, setClientId] = useState(null);
+    const [clientFound, setClientFound] = useState(false);
+
 
     // Busca produtos
     const fetchProducts = async () => {
@@ -111,11 +121,64 @@ function Orders() {
                 customer_name: customerName,
                 status: status
             });
+            
+            if (!customerName.trim()) {
+                alert('Nome do cliente é obrigatório');
+                return;
+            }
+
+            if (selectedProducts.length === 0) {
+                alert('Adicione pelo menos um produto');
+                return;
+            }
+
+            if (orderType === 'entrega') {
+
+                if (!phone.trim()) {
+                    alert('Telefone é obrigatório');
+                    return;
+                }
+
+                if (!address.trim()) {
+                    alert('Endereço é obrigatório');
+                    return;
+                }
+
+                if (!district.trim()) {
+                    alert('Bairro é obrigatório');
+                    return;
+                }
+
+            }
+
+            let currentClientId = clientId;
+
+            if (
+                orderType === 'entrega' &&
+                !currentClientId
+            ) {
+
+                const response = await axios.post(
+                    'http://localhost:5000/clients',
+                    {
+                        nome: customerName,
+                        telefone: phone,
+                        endereco: address,
+                        complemento: complement,
+                        bairro: district
+                    }
+                );
+
+                currentClientId = response.data.id;
+            }
 
             const orderResponse = await axios.post(
                 'http://localhost:5000/orders',
                 {
+                    order_type: orderType,
+                    client_id: currentClientId,
                     customer_name: customerName,
+                    phone: phone,
                     status: status
                 }
             );
@@ -135,6 +198,16 @@ function Orders() {
             }
 
             setCustomerName('');
+            setPhone('');
+            setAddress('');
+            setComplement('');
+            setDistrict('');
+
+            setClientId(null);
+            setClientFound(false);
+
+            setOrderType('balcao');
+
             setStatus('Pendente');
             setSelectedProducts([]);
             
@@ -146,11 +219,12 @@ function Orders() {
 
             console.error(
                 'Erro ao criar pedido:',
-                error
+                error.response?.data || error
             );
 
-        }
+            alert('Erro ao criar pedido');
 
+        }
     };    
 
     // Deleta pedido
@@ -245,6 +319,63 @@ function Orders() {
         customerName.trim() !== '' &&
         selectedProducts.length > 0;
 
+    // Busca client por phone
+    const handlePhoneChange = async (e) => {
+
+        const phoneValue = e.target.value;
+
+        setPhone(phoneValue);
+
+        if (phoneValue.length < 10) {
+            return;
+        }
+
+        try {
+
+            const response = await axios.get(
+                `http://localhost:5000/clients/search?phone=${phoneValue}`
+            );
+
+            const client = response.data;
+
+            if (client) {
+
+                setClientFound(true);
+
+                setClientId(client.id);
+
+                setCustomerName(client.nome);
+
+                setAddress(client.endereco || '');
+
+                setComplement(client.complemento || '');
+
+                setDistrict(client.bairro || '');
+
+            } else {
+
+                setClientFound(false);
+
+                setClientId(null);
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+    };
+
+    // Estilização do campo INPUT
+    const inputClass =
+        "border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500";
+
+    const selectClass =
+        "border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500";
+
+    // FRONT-END
     return (
 
         <div className="p-10">
@@ -272,7 +403,6 @@ function Orders() {
             </div>
 
             {/* GRID */}
-
             <div>
 
                 {orders.map((order) => (
@@ -337,16 +467,145 @@ function Orders() {
 
                             </h2>
                             
-                            <input
-                                type="text"
-                                placeholder="Nome do cliente"
-                                value={customerName}
-                                onChange={(e) =>
-                                    setCustomerName(e.target.value)
-                                }
-                                className="border p-2 w-full mb-3"
-                            />
+                            {/* Informações do cliente */}
+                            <div className="border rounded-lg p-4 mb-4">
 
+                                <h3 className="font-semibold mb-3">
+                                    Informações do cliente
+                                </h3>
+
+                                <p className="text-sm text-gray-600 mb-3">
+                                    Qual tipo de pedido você deseja fazer?
+                                </p>
+
+                                <div className="flex gap-2 mb-6">
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setOrderType('balcao')}
+                                        className={`px-4 py-2 rounded border ${
+                                            orderType === 'balcao'
+                                                ? 'bg-purple-600 text-white'
+                                                : 'bg-white'
+                                        }`}
+                                    >
+                                        Balcão
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setOrderType('entrega')}
+                                        className={`px-4 py-2 rounded border ${
+                                            orderType === 'entrega'
+                                                ? 'bg-purple-600 text-white'
+                                                : 'bg-white'
+                                        }`}
+                                    >
+                                        Entrega
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setOrderType('retirada')}
+                                        className={`px-4 py-2 rounded border ${
+                                            orderType === 'retirada'
+                                                ? 'bg-purple-600 text-white'
+                                                : 'bg-white'
+                                        }`}
+                                    >
+                                        Retirada
+                                    </button>
+
+                                </div>
+                                
+                                {/* Campos */}
+                                {orderType === 'balcao' && (
+                                    <div className="grid grid-cols-12 gap-4">
+                                        <div className="col-span-4">
+                                            <input
+                                                className={inputClass}
+                                                placeholder="Nome"
+                                                value={customerName}
+                                                onChange={(e) => setCustomerName(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {orderType === 'retirada' && (
+                                    <div className="grid grid-cols-12 gap-4">
+                                        <div className="col-span-6">
+                                            <input
+                                                className={inputClass}
+                                                placeholder="Nome"
+                                                value={customerName}
+                                                onChange={(e) => setCustomerName(e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="col-span-6">
+                                            <input
+                                                className={inputClass}
+                                                placeholder="Telefone"
+                                                value={phone}
+                                                onChange={(e) => setPhone(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {orderType === 'entrega' && (
+                                    <div className="grid grid-cols-12 gap-4">
+                                            <div className="col-span-2">
+                                                <input
+                                                    className={inputClass}
+                                                    placeholder="Telefone"
+                                                    value={phone}
+                                                    onChange={handlePhoneChange}
+                                                />
+                                            </div>
+
+                                            <div className="col-span-2">
+                                                <input
+                                                    className={inputClass}
+                                                    placeholder="Nome"
+                                                    value={customerName}
+                                                    onChange={(e) => setCustomerName(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="col-span-4">
+                                                <input
+                                                    className={inputClass}
+                                                    placeholder="Endereço"
+                                                    value={address}
+                                                    onChange={(e) => setAddress(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="col-span-2">
+                                                <input
+                                                    className={inputClass}
+                                                    placeholder="Complemento"
+                                                    value={complement}
+                                                    onChange={(e) => setComplement(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="col-span-2">
+                                                <input
+                                                    className={inputClass}
+                                                    placeholder="Bairro"
+                                                    value={district}
+                                                    onChange={(e) => setDistrict(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                )}
+
+                            </div>
+                            
+                            
                             <div className="border rounded p-3 mb-4">
 
                                 <h3 className="font-bold mb-3">
