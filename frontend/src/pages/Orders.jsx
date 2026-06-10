@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
-import { useEffect, useRef } from 'react';
-
 
 function Orders() {
 
@@ -81,7 +79,9 @@ function Orders() {
         }
 
         setSelectedProductId('');
+        setProductSearch('');
         setQuantity(1);
+        setShowProductDropdown(false);
     };
 
     // Remove produto
@@ -399,13 +399,19 @@ function Orders() {
             .includes(productSearch.toLowerCase())
     );
 
-    const productRef = useRef(null);
+    const productDropdownRef = useRef(null);
+
+    const clearSelectedProduct = () => {
+        setSelectedProductId('');
+        setProductSearch('');
+        setShowProductDropdown(false);
+    };
 
     useEffect(() => {
         function handleClickOutside(event) {
             if (
-                productRef.current &&
-                !productRef.current.contains(event.target)
+                productDropdownRef.current &&
+                !productDropdownRef.current.contains(event.target)
             ) {
                 setShowProductDropdown(false);
             }
@@ -660,31 +666,79 @@ function Orders() {
                                 
                                 {/* Campos */}
                                 <div className="grid grid-cols-12 gap-4 mb-4">
+                                    
+                                    <div 
+                                        ref={productDropdownRef}
+                                        className="col-span-7 relative">
 
-                                    <div className="col-span-7">
-                                        <select
-                                            value={selectedProductId}
-                                            onChange={(e) =>
-                                                setSelectedProductId(e.target.value)
-                                            }
-                                            className={`${selectClass} ${
-                                                selectedProductId ? 'text-black' : 'text-gray-400'
-                                            }`}
-                                        >
-                                            <option value="">
-                                                Selecione um produto
-                                            </option>
+                                        <input
+                                            type="text"
+                                            value={productSearch}
+                                            placeholder="Selecione um produto"
+                                            onChange={(e) => {
+                                                setProductSearch(e.target.value);
+                                                setSelectedProductId('');
+                                                setShowProductDropdown(true);
+                                            }}
+                                            onFocus={() => setShowProductDropdown(true)}
+                                            className={inputClass}
+                                        />
 
-                                            {products.map(product => (
-                                                <option
-                                                    key={product.id}
-                                                    value={product.id}
-                                                    className="text-black"
-                                                >
-                                                    {product.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        {selectedProductId && (
+                                            <button
+                                                type="button"
+                                                onClick={clearSelectedProduct}
+                                                className="
+                                                    absolute
+                                                    right-3
+                                                    top-1/2
+                                                    -translate-y-1/2
+                                                    text-gray-400
+                                                    hover:text-red-500
+                                                    font-bold
+                                                    text-lg
+                                                "
+                                            >
+                                                ×
+                                            </button>
+                                        )}
+
+                                        {showProductDropdown && (
+                                            <div
+                                                className="
+                                                    absolute
+                                                    z-50
+                                                    w-full
+                                                    mt-1
+                                                    bg-white
+                                                    border
+                                                    border-gray-300
+                                                    rounded-md
+                                                    shadow-lg
+                                                    max-h-60
+                                                    overflow-y-auto
+                                                "
+                                            >
+                                                {filteredProducts.map(product => (
+                                                    <div
+                                                        key={product.id}
+                                                        onClick={() => {
+                                                            setSelectedProductId(product.id);
+                                                            setProductSearch(product.name);
+                                                            setShowProductDropdown(false);
+                                                        }}
+                                                        className="
+                                                            px-3
+                                                            py-2
+                                                            cursor-pointer
+                                                            hover:bg-purple-200
+                                                        "
+                                                    >
+                                                        {product.name}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="col-span-2">
