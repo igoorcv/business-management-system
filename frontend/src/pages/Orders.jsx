@@ -28,6 +28,10 @@ function Orders() {
     const [productSearch, setProductSearch] = useState('');
     const [showProductDropdown, setShowProductDropdown] = useState(false);
 
+    const [paymentMethod, setPaymentMethod] = useState('');
+    const [discount, setDiscount] = useState(0);
+    const [deliveryFee, setDeliveryFee] = useState(0);
+
 
     // Busca produtos
     const fetchProducts = async () => {
@@ -319,6 +323,13 @@ function Orders() {
             total + (item.unit_price * item.quantity),
         0
     );
+
+    const finalTotal =
+        orderTotal
+        - Number(discount || 0)
+        + (orderType === 'entrega'
+            ? Number(deliveryFee || 0)
+            : 0);
 
     const isFormValid =
         customerName.trim() !== '' &&
@@ -667,6 +678,7 @@ function Orders() {
                                 {/* Campos */}
                                 <div className="grid grid-cols-12 gap-4 mb-4">
                                     
+                                    {/* Selecione um produto */}
                                     <div 
                                         ref={productDropdownRef}
                                         className="col-span-7 relative">
@@ -740,7 +752,8 @@ function Orders() {
                                             </div>
                                         )}
                                     </div>
-
+                                    
+                                    {/* Quantidade */}
                                     <div className="col-span-2">
                                         <Select
                                             options={quantityOptions}
@@ -794,7 +807,8 @@ function Orders() {
                                             }}
                                         />
                                     </div>
-
+                                    
+                                    {/* Botão: Adicionar item */}
                                     <div className="col-span-3">
                                         <button
                                             onClick={addProduct}
@@ -806,177 +820,301 @@ function Orders() {
 
                                 </div>
 
+                                {/* Grid */}
                                 {selectedProducts.length > 0 && (
 
-                                    <table className="w-full border">
+                                    <div className="border border-gray-300 rounded-lg overflow-hidden">
+                                        
+                                        <table className="w-full">
+                                            
+                                            {/* Header */}
+                                            <thead>
 
-                                        <thead>
+                                                <tr className="bg-gray-100 border-b border-gray-200">
 
-                                            <tr className="bg-gray-100">
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                                                        Produto
+                                                    </th>
 
-                                                <th className="p-2 text-left">
-                                                    Produto
-                                                </th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                                                        Qtde
+                                                    </th>
 
-                                                <th className="p-2">
-                                                    Qtde
-                                                </th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                                                        Unitário
+                                                    </th>
 
-                                                <th className="p-2">
-                                                    Unitário
-                                                </th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                                                        Subtotal
+                                                    </th>
 
-                                                <th className="p-2">
-                                                    Subtotal
-                                                </th>
-
-                                                <th className="p-2">
-                                                    Ações
-                                                </th>
-
-                                            </tr>
-
-                                        </thead>
-
-                                        <tbody>
-
-                                            {selectedProducts.map(item => (
-
-                                                <tr
-                                                    key={item.product_id}
-                                                    className="border-t"
-                                                >
-
-                                                    <td className="p-2">
-                                                        {item.product_name}
-                                                    </td>
-
-                                                    <td className="p-2 text-center">
-
-                                                        <input
-                                                            type="number"
-                                                            min="1"
-                                                            value={item.quantity}
-                                                            onChange={(e) => {
-
-                                                                const updated =
-                                                                    selectedProducts.map(prod =>
-                                                                        prod.product_id === item.product_id
-                                                                            ? {
-                                                                                ...prod,
-                                                                                quantity: Number(e.target.value)
-                                                                            }
-                                                                            : prod
-                                                                    );
-
-                                                                setSelectedProducts(updated);
-                                                            }}
-                                                            className="border w-20 text-center"
-                                                        />
-
-                                                    </td>
-
-                                                    <td className="p-2 text-center">
-                                                        R$ {item.unit_price.toFixed(2)}
-                                                    </td>
-
-                                                    <td className="p-2 text-center">
-                                                        R$ {(item.unit_price * item.quantity).toFixed(2)}
-                                                    </td>
-
-                                                    <td className="p-2 text-center">
-
-                                                        <button
-                                                            onClick={() =>
-                                                                removeProduct(item.product_id)
-                                                            }
-                                                            className="bg-red-500 text-white px-2 py-1 rounded"
-                                                        >
-                                                            X
-                                                        </button>
-
-                                                    </td>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                                                        Ações
+                                                    </th>
 
                                                 </tr>
 
-                                            ))}
+                                            </thead>
 
-                                        </tbody>
+                                            {/* Body */}
+                                            <tbody>
 
-                                    </table>
+                                                {/* Styles grid */}
+                                                {selectedProducts.map(item => (
+                                                    
+                                                    <tr
+                                                        key={item.product_id}
+                                                        className="
+                                                            border-b
+                                                            border-gray-100
+                                                            hover:bg-gray-50
+                                                            transition-colors
+                                                        "
+                                                    >
+                                                        
+                                                        {/* Produto */}
+                                                        <td className="px-4 py-2 text-left text-sm">
+                                                            {item.product_name}
+                                                        </td>
 
+                                                        {/* Quantidade */}
+                                                        <td className="px-4 py-2 text-left text-sm">
+
+                                                            <div className="w-24">
+
+                                                                <Select
+                                                                    options={quantityOptions}
+                                                                    value={
+                                                                        quantityOptions.find(
+                                                                            option => option.value === item.quantity
+                                                                        )
+                                                                    }
+                                                                    onChange={(selected) => {
+
+                                                                        const updated =
+                                                                            selectedProducts.map(prod =>
+                                                                                prod.product_id === item.product_id
+                                                                                    ? {
+                                                                                        ...prod,
+                                                                                        quantity: selected?.value
+                                                                                    }
+                                                                                    : prod
+                                                                            );
+
+                                                                        setSelectedProducts(updated);
+
+                                                                    }}
+                                                                    isSearchable
+                                                                    maxMenuHeight={180}
+                                                                    styles={{
+                                                                        control: (provided) => ({
+                                                                            ...provided,
+                                                                            minHeight: '38px',
+                                                                            height: '38px',
+                                                                            borderColor: '#E9D5FF',
+                                                                            borderRadius: '0.375rem',
+                                                                            boxShadow: 'none',
+                                                                        }),
+
+                                                                        valueContainer: (provided) => ({
+                                                                            ...provided,
+                                                                            height: '38px',
+                                                                            padding: '0 8px',
+                                                                        }),
+
+                                                                        input: (provided) => ({
+                                                                            ...provided,
+                                                                            margin: '0',
+                                                                            padding: '0',
+                                                                        }),
+
+                                                                        indicatorsContainer: (provided) => ({
+                                                                            ...provided,
+                                                                            height: '38px',
+                                                                        }),
+
+                                                                        option: (provided, state) => ({
+                                                                            ...provided,
+                                                                            backgroundColor: state.isFocused
+                                                                                ? '#E9D5FF'
+                                                                                : 'white',
+
+                                                                            color: state.isSelected
+                                                                                ? 'black'
+                                                                                : '#6B21A8',
+                                                                        }),
+                                                                        menuPortal: (provided) => ({
+                                                                            ...provided,
+                                                                            zIndex: 9999,
+                                                                        })
+                                                                    }}
+                                                                    menuPortalTarget={document.body}
+                                                                    menuPosition="fixed"
+                                                                />
+
+                                                            </div>
+
+                                                        </td>
+                            
+                                                        {/* Unitário */}
+                                                        <td className="px-4 py-2 text-left text-sm">
+                                                            R$ {item.unit_price.toFixed(2)}
+                                                        </td>
+                                                        
+                                                        {/* Subtotal */}
+                                                        <td className="px-4 py-2 text-left text-sm font-medium">
+                                                            R$ {(item.unit_price * item.quantity).toFixed(2)}
+                                                        </td>
+
+                                                        {/* Ações */}
+                                                        <td className="px-4 py-2 text-left text-sm">
+
+                                                            <button
+                                                                onClick={() =>
+                                                                    removeProduct(item.product_id)
+                                                                }
+                                                                
+                                                                className="
+                                                                    bg-red-500
+                                                                    hover:bg-red-600
+                                                                    text-white
+                                                                    px-3
+                                                                    py-1
+                                                                    rounded-md
+                                                                    transition-colors
+                                                                "
+                                                            >
+                                                                X
+                                                            </button>
+
+                                                        </td>
+
+                                                    </tr>
+
+                                                ))}
+
+                                            </tbody>
+
+                                        </table>
+                                    </div>
                                 )}
-
-                                <div className="text-right mt-4 font-bold text-lg">
-
-                                    Total: R$ {orderTotal.toFixed(2)}
-
-                                </div>
 
                             </div>
 
-                            {selectedProducts.map((item, index) => {
+                            {/* Informações de pagamento */}
+                            <div className="border rounded-lg p-4 mb-4">
 
-                                const product = products.find(
-                                    p => p.id === item.product_id
-                                );
+                                <h3 className="font-semibold mb-3">
+                                    Informações de pagamento
+                                </h3>
 
-                                return (
+                                {/* Campos */}
+                                <div className="grid grid-cols-12 gap-4">
 
-                                    <div
-                                        key={index}
-                                        className="flex gap-2 mt-2"
-                                    >
+                                    {/* Forma de pagamento */}
+                                    <div className="col-span-4">
 
-                                        <span>
-                                            {product?.name}
-                                        </span>
+                                        <select
+                                            value={paymentMethod}
+                                            onChange={(e) =>
+                                                setPaymentMethod(e.target.value)
+                                            }
+                                            className={inputClass}
+                                        >
+                                            <option value="">
+                                                Forma de pagamento
+                                            </option>
+
+                                            <option value="dinheiro">
+                                                Dinheiro
+                                            </option>
+
+                                            <option value="pix">
+                                                PIX
+                                            </option>
+
+                                            <option value="credito">
+                                                Cartão de Crédito
+                                            </option>
+
+                                            <option value="debito">
+                                                Cartão de Débito
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+                                    {/* Desconto */}
+                                    <div className="col-span-2">
 
                                         <input
                                             type="number"
-                                            min="1"
-                                            value={item.quantity}
-                                            onChange={(e) => {
-
-                                                const updated = [...selectedProducts];
-
-                                                updated[index].quantity =
-                                                    Number(e.target.value);
-
-                                                setSelectedProducts(updated);
-                                            }}
+                                            step="0.01"
+                                            min="0"
+                                            value={discount}
+                                            onChange={(e) =>
+                                                setDiscount(e.target.value)
+                                            }
+                                            placeholder="Desconto"
+                                            className={inputClass}
                                         />
 
                                     </div>
 
-                                );
-                            })}
+                                    {/* Taxa entrega */}
+                                    {orderType === 'entrega' && (
 
-                            <select
-                                value={status}
-                                onChange={(e) =>
-                                    setStatus(e.target.value)
-                                }
-                                className="border p-2 w-full mb-4"
-                            >
-                                <option value="Pendente">
-                                    Pendente
-                                </option>
+                                        <div className="col-span-2">
 
-                                <option value="Em preparo">
-                                    Em preparo
-                                </option>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={deliveryFee}
+                                                onChange={(e) =>
+                                                    setDeliveryFee(e.target.value)
+                                                }
+                                                placeholder="Taxa entrega"
+                                                className={inputClass}
+                                            />
 
-                                <option value="Saiu para entrega">
-                                    Saiu para entrega
-                                </option>
+                                        </div>
 
-                                <option value="Entregue">
-                                    Entregue
-                                </option>
+                                    )}
 
-                            </select>
+                                    {/* Total */}
+                                    <div
+                                        className={`
+                                            ${orderType === 'entrega'
+                                                ? 'col-span-4'
+                                                : 'col-span-6'
+                                            }
+                                            flex
+                                            items-center
+                                            justify-end
+                                        `}
+                                    >
 
+                                        <div>
+
+                                            <div className="text-sm text-gray-500">
+                                                Valor total
+                                            </div>
+
+                                            <div className="text-2xl font-bold text-purple-700">
+                                                R$ {finalTotal.toFixed(2)}
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>                            
+
+                            {/* Botões */}
                             <div className="flex justify-end gap-2">
 
                                 <button
