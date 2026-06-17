@@ -1,6 +1,7 @@
 # Criação da estrutura do Database
 
 from . import db
+from datetime import datetime, timedelta
  
 class Client(db.Model):
     __tablename__ = 'clients'
@@ -114,6 +115,12 @@ class Order(db.Model):
         default=0
     )
     
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=lambda: datetime.utcnow() - timedelta(hours=3)
+    )
+    
     items = db.relationship(
         'OrderItem',
         backref='order',
@@ -158,7 +165,12 @@ class Order(db.Model):
             'items': [
                 item.to_dict()
                 for item in self.items
-            ]
+            ],
+            'created_at': (
+                self.created_at.strftime('%d/%m/%Y %H:%M:%S')
+                if self.created_at
+                else None
+            )
         }
  
 class OrderItem(db.Model):
