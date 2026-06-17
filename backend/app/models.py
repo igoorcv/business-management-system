@@ -207,5 +207,5 @@ class OrderItem(db.Model):
             'product_name': self.product.name if self.product else '',
             'product_price': self.product.price if self.product else '',
             'quantity': self.quantity,
-            'comment': self.observation
+            'observation': self.observation
         }

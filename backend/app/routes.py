@@ -166,16 +166,59 @@ def update_order(id):
 
     data = request.json
 
-    #order.customer_name = data['customer_name']
-    #order.total_price = data['total_price']
-    #order.status = data['status']
     order.customer_name = data.get('customer_name')
-    #order.total_price = data.get('total_price')
     order.status = data.get('status')
     order.payment_method = data.get('payment_method')
     order.discount = data.get('discount', 0)
     order.delivery_fee = data.get('delivery_fee', 0)
+    
+    items = data.get('items', [])
+    
+    current_items = OrderItem.query.filter_by(
+        order_id=id
+    ).all()
+    
+    received_ids = {
+        item['id']
+        for item in items
+        if item.get('id')
+    }
+    
+    # Remover itens do pedido
+    for current_item in current_items:
 
+        if current_item.id not in received_ids:
+
+            db.session.delete(current_item)
+    
+    # Atualizar ou adicionar itens
+    for item_data in items:
+
+        if item_data.get('id'):
+
+            item = OrderItem.query.filter_by(
+                id=item_data['id'],
+                order_id=id
+            ).first()
+
+            if item:
+
+                item.quantity = item_data['quantity']
+                item.observation = item_data.get('observation')
+                
+        else:
+
+            new_item = OrderItem(
+                order_id=id,
+                product_id=item_data['product_id'],
+                quantity=item_data['quantity'],
+                observation=item_data.get('observation')
+            )
+
+            db.session.add(new_item)
+    
+    order.calculate_total()
+    
     db.session.commit()
 
     return jsonify({
