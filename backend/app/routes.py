@@ -115,6 +115,11 @@ def create_order():
         order_type=data['order_type'],
         customer_name=data['customer_name'],
         phone=data.get('phone'),
+        
+        payment_method=data.get('payment_method'),
+        discount=data.get('discount', 0),
+        delivery_fee=data.get('delivery_fee', 0),
+        
         total=0,
         status=data['status']
     )
@@ -165,8 +170,11 @@ def update_order(id):
     #order.total_price = data['total_price']
     #order.status = data['status']
     order.customer_name = data.get('customer_name')
-    order.total_price = data.get('total_price')
+    #order.total_price = data.get('total_price')
     order.status = data.get('status')
+    order.payment_method = data.get('payment_method')
+    order.discount = data.get('discount', 0)
+    order.delivery_fee = data.get('delivery_fee', 0)
 
     db.session.commit()
 
@@ -194,7 +202,8 @@ def create_order_item():
     item = OrderItem(
         order_id=data['order_id'],
         product_id=data['product_id'],
-        quantity=data['quantity']
+        quantity=data['quantity'],
+        observation=data.get('observation')
     )
 
     db.session.add(item)

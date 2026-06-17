@@ -99,6 +99,21 @@ class Order(db.Model):
         default='pending'
     )
     
+    payment_method = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
+    discount = db.Column(
+        db.Float,
+        default=0
+    )
+
+    delivery_fee = db.Column(
+        db.Float,
+        default=0
+    )
+    
     items = db.relationship(
         'OrderItem',
         backref='order',
@@ -107,13 +122,17 @@ class Order(db.Model):
 
     def calculate_total(self):
 
-        total = 0
+        subtotal = 0
 
         for item in self.items:
 
-            total += item.product.price * item.quantity
+            subtotal += item.product.price * item.quantity
 
-        self.total = total
+        self.total = (
+            subtotal
+            - float(self.discount or 0)
+            + float(self.delivery_fee or 0)
+        )
 
     def to_dict(self):
 
@@ -131,6 +150,9 @@ class Order(db.Model):
             ),
             'client_id': self.client_id,
             'order_type': self.order_type,
+            'payment_method': self.payment_method,
+            'discount': self.discount,
+            'delivery_fee': self.delivery_fee,
             'total_price': self.total,
             'status': self.status,
             'items': [
@@ -165,6 +187,11 @@ class OrderItem(db.Model):
         nullable=False,
         default=1
     )
+    
+    observation = db.Column(
+        db.Text,
+        nullable=True
+    )
 
     product = db.relationship(
         'Product',
@@ -179,5 +206,6 @@ class OrderItem(db.Model):
             'product_id': self.product_id,
             'product_name': self.product.name if self.product else '',
             'product_price': self.product.price if self.product else '',
-            'quantity': self.quantity
+            'quantity': self.quantity,
+            'comment': self.observation
         }

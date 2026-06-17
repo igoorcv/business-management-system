@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
+import { NumericFormat } from 'react-number-format';
 
 function Orders() {
 
@@ -32,6 +33,8 @@ function Orders() {
     const [discount, setDiscount] = useState(0);
     const [deliveryFee, setDeliveryFee] = useState(0);
 
+    const [paymentSearch, setPaymentSearch] = useState('');
+    const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
 
     // Busca produtos
     const fetchProducts = async () => {
@@ -77,7 +80,8 @@ function Orders() {
                     product_id: product.id,
                     product_name: product.name,
                     unit_price: product.price,
-                    quantity
+                    quantity,
+                    observation: ''
                 }
             ]);
         }
@@ -130,7 +134,12 @@ function Orders() {
                 customer_name: customerName,
                 status: status
             });
-            
+
+            if (!paymentMethod) {
+                alert('Forma de pagamento é obrigatória');
+                return;
+            }
+
             if (!customerName.trim()) {
                 alert('Nome do cliente é obrigatório');
                 return;
@@ -188,7 +197,10 @@ function Orders() {
                     client_id: currentClientId,
                     customer_name: customerName,
                     phone: phone,
-                    status: status
+                    status: status,
+                    payment_method: paymentMethod,
+                    discount: Number(discount || 0),
+                    delivery_fee: Number(deliveryFee || 0)
                 }
             );
 
@@ -201,7 +213,8 @@ function Orders() {
                     {
                         order_id: orderId,
                         product_id: item.product_id,
-                        quantity: item.quantity
+                        quantity: item.quantity,
+                        observation: item.observation
                     }
                 );
             }
@@ -219,6 +232,13 @@ function Orders() {
 
             setStatus('Pendente');
             setSelectedProducts([]);
+
+            setPaymentMethod('');
+            setPaymentSearch('');
+            setShowPaymentDropdown(false);
+
+            setDiscount(0);
+            setDeliveryFee(0);
             
             setShowModal(false);
 
@@ -266,8 +286,13 @@ function Orders() {
         setEditingId(order.id);
 
         setCustomerName(order.customer_name || '');
-
         setStatus(order.status || 'Pendente');
+
+        setPaymentMethod(order.payment_method || '');
+        setPaymentSearch(order.payment_method || '');
+
+        setDiscount(order.discount || 0);
+        setDeliveryFee(order.delivery_fee || 0);
 
         setShowModal(true);
 
@@ -290,7 +315,11 @@ function Orders() {
                 {
                     customer_name: customerName,
                     //total_price: totalPrice,
-                    status: status
+                    status: status,
+                    payment_method: paymentMethod,
+                    discount: Number(discount || 0),
+                    delivery_fee: Number(deliveryFee || 0)
+
                 }
             );
 
@@ -318,6 +347,39 @@ function Orders() {
         fetchProducts();
     }, []);
 
+    // Close modal
+    const resetForm = () => {
+        setCustomerName('');
+        setPhone('');
+        setAddress('');
+        setComplement('');
+        setDistrict('');
+
+        setClientId(null);
+        setClientFound(false);
+
+        setOrderType('balcao');
+
+        setStatus('Pendente');
+
+        setSelectedProducts([]);
+
+        setSelectedProductId('');
+        setProductSearch('');
+        setShowProductDropdown(false);
+
+        setPaymentMethod('');
+        setPaymentSearch('');
+        setShowPaymentDropdown(false);
+
+        setDiscount(0);
+        setDeliveryFee(0);
+
+        setQuantity(1);
+
+    }; 
+    
+    // Soma total do pedido
     const orderTotal = selectedProducts.reduce(
         (total, item) =>
             total + (item.unit_price * item.quantity),
@@ -333,7 +395,8 @@ function Orders() {
 
     const isFormValid =
         customerName.trim() !== '' &&
-        selectedProducts.length > 0;
+        selectedProducts.length > 0 &&
+        paymentMethod.trim() !== '';
 
     // Busca client por phone
     const handlePhoneChange = async (e) => {
@@ -426,6 +489,12 @@ function Orders() {
             ) {
                 setShowProductDropdown(false);
             }
+            if (
+                paymentDropdownRef.current &&
+                !paymentDropdownRef.current.contains(event.target)
+            ) {
+                setShowPaymentDropdown(false);
+            }
         }
 
         document.addEventListener('mousedown', handleClickOutside);
@@ -437,6 +506,29 @@ function Orders() {
             );
         };
     }, []);
+
+    const paymentOptions = [
+        'Dinheiro',
+        'PIX',
+        'Cartão de Crédito',
+        'Cartão de Débito',
+        'Vale Refeição',
+        'Vale Alimentação'
+    ];
+
+    const filteredPayments = paymentOptions.filter(payment =>
+        payment
+            .toLowerCase()
+            .includes(paymentSearch.toLowerCase())
+    );
+    
+    const clearPaymentMethod = () => {
+        setPaymentMethod('');
+        setPaymentSearch('');
+        setShowPaymentDropdown(false);
+    };
+
+    const paymentDropdownRef = useRef(null);
 
     // FRONT-END
     return (
@@ -618,6 +710,7 @@ function Orders() {
                                 )}
 
                                 {orderType === 'entrega' && (
+                                    
                                     <div className="grid grid-cols-12 gap-4">
                                             <div className="col-span-2">
                                                 <input
@@ -841,6 +934,10 @@ function Orders() {
                                                     </th>
 
                                                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                                                        Observação
+                                                    </th>
+
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                                                         Unitário
                                                     </th>
 
@@ -955,6 +1052,31 @@ function Orders() {
                                                             </div>
 
                                                         </td>
+                                                        
+                                                        {/* Observação */}
+                                                        <td className="px-4 py-2 text-left text-sm">
+
+                                                            <div className="w-90">
+                                                                <input
+                                                                        className={inputClass}
+                                                                        placeholder="Digite aqui"
+                                                                        value={item.observation || ''}
+                                                                        onChange={(e) => {
+                                                                            const updated =
+                                                                                selectedProducts.map(prod =>
+                                                                                    prod.product_id === item.product_id
+                                                                                        ? {
+                                                                                            ...prod,
+                                                                                            observation: e.target.value
+                                                                                        }
+                                                                                        : prod
+                                                                                );
+
+                                                                            setSelectedProducts(updated);
+                                                                        }}
+                                                                    />
+                                                            </div>
+                                                        </td>
                             
                                                         {/* Unitário */}
                                                         <td className="px-4 py-2 text-left text-sm">
@@ -1011,54 +1133,142 @@ function Orders() {
                                 {/* Campos */}
                                 <div className="grid grid-cols-12 gap-4">
 
-                                    {/* Forma de pagamento */}
-                                    <div className="col-span-4">
+                                    {/* Forma de pagamento */}                            
+                                    <div
+                                        ref={paymentDropdownRef}
+                                        className="col-span-4"
+                                    >    
 
-                                        <select
-                                            value={paymentMethod}
-                                            onChange={(e) =>
-                                                setPaymentMethod(e.target.value)
-                                            }
-                                            className={inputClass}
-                                        >
-                                            <option value="">
-                                                Forma de pagamento
-                                            </option>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Forma de pagamento
+                                    </label>
 
-                                            <option value="dinheiro">
-                                                Dinheiro
-                                            </option>
+                                        <div className="col-span-4 relative">
 
-                                            <option value="pix">
-                                                PIX
-                                            </option>
+                                            <input
+                                                type="text"
+                                                value={paymentSearch}
+                                                placeholder="Selecione um pagamento"
+                                                onChange={(e) => {
+                                                    setPaymentSearch(e.target.value);
+                                                    setPaymentMethod('');
+                                                    setShowPaymentDropdown(true);
+                                                }}
+                                                onFocus={() => setShowPaymentDropdown(true)}
+                                                className={inputClass}
+                                            />
 
-                                            <option value="credito">
-                                                Cartão de Crédito
-                                            </option>
+                                            {paymentMethod && (
+                                                <button
+                                                    type="button"
+                                                    onClick={clearPaymentMethod}
+                                                    className="
+                                                        absolute
+                                                        right-3
+                                                        top-1/2
+                                                        -translate-y-1/2
+                                                        text-gray-400
+                                                        hover:text-red-500
+                                                        font-bold
+                                                        text-lg
+                                                    "
+                                                >
+                                                    ×
+                                                </button>
+                                            )}
 
-                                            <option value="debito">
-                                                Cartão de Débito
-                                            </option>
+                                            {showPaymentDropdown && (
 
-                                        </select>
+                                                <div
+                                                    className="
+                                                        absolute
+                                                        z-50
+                                                        w-full
+                                                        mt-1
+                                                        bg-white
+                                                        border
+                                                        border-gray-300
+                                                        rounded-md
+                                                        shadow-lg
+                                                        max-h-60
+                                                        overflow-y-auto
+                                                    "
+                                                >
+
+                                                    {filteredPayments.map(payment => (
+
+                                                        <div
+                                                            key={payment}
+                                                            onClick={() => {
+                                                                setPaymentMethod(payment);
+                                                                setPaymentSearch(payment);
+                                                                setShowPaymentDropdown(false);
+                                                            }}
+                                                            className="
+                                                                px-3
+                                                                py-2
+                                                                cursor-pointer
+                                                                hover:bg-purple-200
+                                                            "
+                                                        >
+                                                            {payment}
+                                                        </div>
+
+                                                    ))}
+
+                                                </div>
+
+                                            )}
+
+                                        </div>
 
                                     </div>
 
                                     {/* Desconto */}
                                     <div className="col-span-2">
 
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={discount}
-                                            onChange={(e) =>
-                                                setDiscount(e.target.value)
-                                            }
-                                            placeholder="Desconto"
-                                            className={inputClass}
-                                        />
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Desconto
+                                        </label>
+
+                                        <div className="relative">
+
+                                            <span
+                                                className="
+                                                    absolute
+                                                    left-3
+                                                    top-1/2
+                                                    -translate-y-1/2
+                                                    text-gray-500
+                                                "
+                                            >
+                                                R$ -
+                                            </span>
+
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={discount}
+                                                onChange={(e) =>
+                                                    setDiscount(e.target.value)
+                                                }
+                                                placeholder="0,00"
+                                                className="
+                                                    border
+                                                    border-gray-300
+                                                    rounded-md
+                                                    pl-10
+                                                    pr-3
+                                                    py-2
+                                                    w-full
+                                                    focus:outline-none
+                                                    focus:ring-2
+                                                    focus:ring-purple-500
+                                                "
+                                            />
+
+                                        </div>
 
                                     </div>
 
@@ -1067,17 +1277,49 @@ function Orders() {
 
                                         <div className="col-span-2">
 
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={deliveryFee}
-                                                onChange={(e) =>
-                                                    setDeliveryFee(e.target.value)
-                                                }
-                                                placeholder="Taxa entrega"
-                                                className={inputClass}
-                                            />
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Taxa de entrega
+                                            </label>
+
+                                            <div className="relative">
+
+                                                <span
+                                                    className="
+                                                        absolute
+                                                        left-3
+                                                        top-1/2
+                                                        -translate-y-1/2
+                                                        text-gray-500
+                                                    "
+                                                >
+                                                    R$
+                                                </span>
+
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={deliveryFee}
+                                                    onChange={(e) =>
+                                                        setDeliveryFee(e.target.value)
+                                                    }
+                                                    placeholder="0,00"
+                                                    className="
+                                                        border
+                                                        border-gray-300
+                                                        rounded-md
+                                                        pl-10
+                                                        pr-3
+                                                        py-2
+                                                        w-full
+                                                        focus:outline-none
+                                                        focus:ring-2
+                                                        focus:ring-purple-500
+                                                        
+                                                    "
+                                                />
+
+                                            </div>
 
                                         </div>
 
@@ -1119,10 +1361,22 @@ function Orders() {
 
                                 <button
                                     onClick={() => {
+                                        resetForm();
                                         setShowModal(false);
                                         setEditingId(null);
-                                    }}
-                                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                                    }}                               
+                                    className="
+                                        w-32
+                                        px-8
+                                        py-2
+                                        rounded
+                                        border
+                                        border-purple-600
+                                        text-purple-600
+                                        bg-white
+                                        hover:bg-purple-50
+                                        transition-colors
+                                    "
                                 >
                                     Cancelar
                                 </button>
@@ -1140,11 +1394,19 @@ function Orders() {
 
                                     }}
                                     disabled={!isFormValid}
-                                    className={`px-4 py-2 rounded text-white ${
-                                        isFormValid
-                                            ? 'bg-green-500 hover:bg-green-600'
-                                            : 'bg-gray-400 cursor-not-allowed'
-                                    }`}
+                                    className={`
+                                        w-32
+                                        px-8
+                                        py-2
+                                        rounded
+                                        text-white
+                                        transition-colors
+                                        ${
+                                            isFormValid
+                                                ? 'bg-purple-600 hover:bg-purple-800'
+                                                : 'bg-gray-400 cursor-not-allowed'
+                                        }
+                                    `}
                                 >
                                     {
                                         editingId
