@@ -165,7 +165,7 @@ def update_order(id):
         }), 404
 
     data = request.json
-
+    
     order.customer_name = data.get('customer_name')
     order.status = data.get('status')
     order.payment_method = data.get('payment_method')
@@ -321,3 +321,20 @@ def search_client():
 
 
 # Cria método DELETE Client
+
+
+# Cria método UPDATE Status Order
+@routes.route('/orders/<int:id>/status', methods=['PUT'])
+def update_order_status(id):
+
+    order = Order.query.get_or_404(id)
+
+    data = request.json
+
+    order.status = data['status']
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Status atualizado'
+    })

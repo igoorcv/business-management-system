@@ -166,11 +166,8 @@ class Order(db.Model):
                 item.to_dict()
                 for item in self.items
             ],
-            'created_at': (
-                self.created_at.strftime('%d/%m/%Y %H:%M:%S')
-                if self.created_at
-                else None
-            )
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            
         }
  
 class OrderItem(db.Model):

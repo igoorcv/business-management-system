@@ -3,13 +3,18 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import { NumericFormat } from 'react-number-format';
+import {
+    DragDropContext,
+    Droppable,
+    Draggable
+} from '@hello-pangea/dnd';
 
 function Orders() {
 
     const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [customerName, setCustomerName] = useState('');
-    const [status, setStatus] = useState('Pendente');
+    const [status, setStatus] = useState('Em preparo');
     const [editingId, setEditingId] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [selectedProducts, setSelectedProducts] = useState([]);
@@ -35,6 +40,13 @@ function Orders() {
 
     const [paymentSearch, setPaymentSearch] = useState('');
     const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
+
+    const statusColumns = [
+        'Em preparo',
+        'Pronto',
+        'Saiu para entrega',
+        'Finalizado'
+    ];
 
     // Busca produtos
     const fetchProducts = async () => {
@@ -230,7 +242,7 @@ function Orders() {
 
             setOrderType('balcao');
 
-            setStatus('Pendente');
+            setStatus('Em preparo');
             setSelectedProducts([]);
 
             setPaymentMethod('');
@@ -286,7 +298,7 @@ function Orders() {
         setEditingId(order.id);
 
         setCustomerName(order.customer_name || '');
-        setStatus(order.status || 'Pendente');
+        setStatus(order.status || 'Em preparo');
 
         setPaymentMethod(order.payment_method || '');
         setPaymentSearch(order.payment_method || '');
@@ -338,7 +350,7 @@ function Orders() {
             setEditingId(null);
 
             setCustomerName('');
-            setStatus('Pendente');
+            setStatus('Em preparo');
             setShowModal(false);
 
         } catch (error) {
@@ -370,7 +382,7 @@ function Orders() {
 
         setOrderType('balcao');
 
-        setStatus('Pendente');
+        setStatus('Em preparo');
 
         setSelectedProducts([]);
 
@@ -452,6 +464,42 @@ function Orders() {
         } catch (error) {
 
             console.error(error);
+
+        }
+
+    };
+
+    // Atualiza status arrastando card
+    const handleDragEnd = async (result) => {
+
+        if (!result.destination) {
+            return;
+        }
+
+        const orderId = Number(
+            result.draggableId
+        );
+
+        const newStatus =
+            result.destination.droppableId;
+
+        try {
+
+            await axios.put(
+                `http://localhost:5000/orders/${orderId}/status`,
+                {
+                    status: newStatus
+                }
+            );
+
+            fetchOrders();
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao mover pedido:',
+                error
+            );
 
         }
 
@@ -540,6 +588,73 @@ function Orders() {
 
     const paymentDropdownRef = useRef(null);
 
+    const getStatusColor = (status) => {
+
+        switch (status) {
+
+            case 'Em preparo':
+                return 'border-orange-400 bg-orange-50';
+
+            case 'Pronto':
+                return 'border-yellow-400 bg-yellow-10';
+                
+            case 'Saiu para entrega':
+                return 'border-blue-400 bg-blue-50';
+
+            case 'Finalizado':
+                return 'border-green-600 bg-green-50';
+
+            default:
+                return 'border-gray-300 bg-gray-50';
+        }
+
+    };
+
+    const getOrderTypeBadge = (type) => {
+
+        switch (type) {
+
+            case 'entrega':
+                return 'bg-blue-100 text-blue-800';
+
+            case 'retirada':
+                return 'bg-green-100 text-green-800';
+
+            case 'balcao':
+                return 'bg-purple-100 text-purple-800';
+
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+
+    };
+
+    const getWaitingTime = (createdAt) => {
+
+        if (!createdAt) return 0;
+
+        const created = new Date(createdAt);
+
+        const now = new Date();
+
+        return Math.floor(
+            (now - created) / 1000 / 60
+        );
+    };
+
+    const getWaitingColor = (minutes) => {
+
+        if (minutes >= 40)
+            return 'text-red-600';
+
+        if (minutes >= 20)
+            return 'text-orange-600';
+
+        return 'text-green-600';
+
+    };
+
+
     // FRONT-END
     return (
 
@@ -556,7 +671,7 @@ function Orders() {
                     onClick={() => {
                         setEditingId(null);
                         setCustomerName('');
-                        setStatus('Pendente');
+                        setStatus('Em preparo');
                         setShowModal(true);
                     }}
                     className="bg-blue-500 text-white px-4 py-2 rounded"
@@ -566,55 +681,321 @@ function Orders() {
 
 
             </div>
+            
+            {/* KANBAN */}
+            <DragDropContext
+                onDragEnd={handleDragEnd}
+            >
 
-            {/* GRID */}
-            <div>
+                <div
+                    className="
+                        flex
+                        gap-4
+                        overflow-x-auto
+                        pb-4
+                        items-start
+                    "
+                >
 
-                {orders.map((order) => (
+                    {statusColumns.map(status => (
 
-                    <div
-                        key={order.id}
-                        className="border p-4 mb-2"
-                    >
-
-                        <h2 className="font-bold">
-                            {order.customer_name}
-                        </h2>
-
-                        <p>
-                            Total: R$ {order.total_price?.toFixed(2)}
-                        </p>
-
-                        <p>
-                            Status: {order.status}
-                        </p>
-
-                        <button
-                            onClick={() => editOrder(order)}
-                            className="bg-yellow-500 text-white px-3 py-1 mt-2 mr-2"
+                        <Droppable
+                            key={status}
+                            droppableId={status}
                         >
-                            Editar
-                        </button>
+                            {/* Card */}
+                            {(provided) => (
+                                
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className="
+                                        min-w-[280px]
+                                        flex-1
+                                        bg-slate-50
+                                        rounded-xl
+                                        p-4
+                                        border
+                                    "
+                                >
 
-                        <button
-                             onClick={() => navigate(`/orders/${order.id}`)}
-                            className="bg-blue-500 text-white px-3 py-1 mt-2 mr-2"
-                        >
-                            Ver Itens
-                        </button>
+                                    <div
+                                        className="
+                                            flex
+                                            justify-between
+                                            items-center
+                                            mb-4
+                                        "
+                                    >
 
-                        <button
-                            onClick={() => deleteOrder(order.id)}
-                            className="bg-red-500 text-white px-3 py-1 mt-2"
-                        >
-                            Excluir
-                        </button>
+                                        <h2
+                                            className="
+                                                font-bold
+                                                text-lg
+                                            "
+                                        >
+                                            {status}
+                                        </h2>
+                                       
+                                       {/* Contador */}
+                                        <span
+                                            className="
+                                                bg-purple-600
+                                                text-white
+                                                rounded-full
+                                                w-8
+                                                h-8
+                                                flex
+                                                items-center
+                                                justify-center
+                                                text-sm
+                                                font-bold
+                                            "
+                                        >
 
-                    </div>
+                                            {
+                                                orders.filter(
+                                                    o =>
+                                                        o.status === status
+                                                ).length
+                                            }
+                                        </span>
 
-                ))}
+                                    </div>
 
-            </div>
+                                    {
+                                        orders
+                                            .filter(
+                                                order =>
+                                                    order.status === status
+                                            )
+                                            .map(
+                                                (
+                                                    order,
+                                                    index
+                                                ) => (
+
+                                                <Draggable
+                                                    key={order.id}
+                                                    draggableId={String(order.id)}
+                                                    index={index}
+                                                >
+                                                    {(provided) => {
+
+                                                        const waitingMinutes =
+                                                            getWaitingTime(order.created_at);
+
+                                                        return (
+
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                {...provided.draggableProps}
+                                                                {...provided.dragHandleProps}
+                                                                className={`
+                                                                    bg-white
+                                                                    rounded-xl
+                                                                    shadow-sm
+                                                                    hover:shadow-lg
+                                                                    transition-all
+                                                                    p-4
+                                                                    mb-3
+                                                                    border-l-4
+                                                                    ${getStatusColor(order.status)}
+                                                                `}
+                                                            >
+
+                                                                {/* Cabeçalho */}
+                                                                <div className="flex justify-between items-start">
+
+                                                                    <div>
+
+                                                                        <div
+                                                                            className="
+                                                                                text-xs
+                                                                                text-gray-500
+                                                                            "
+                                                                        >
+                                                                            Pedido #{order.id}
+                                                                        </div>
+
+                                                                        <div
+                                                                            className="
+                                                                                font-bold
+                                                                                text-lg
+                                                                                text-gray-800
+                                                                            "
+                                                                        >
+                                                                            {order.customer_name}
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <button
+                                                                        onClick={(e) => {
+
+                                                                            e.stopPropagation();
+
+                                                                            if (
+                                                                                window.confirm(
+                                                                                    'Deseja excluir este pedido?'
+                                                                                )
+                                                                            ) {
+                                                                                deleteOrder(order.id);
+                                                                            }
+
+                                                                        }}
+                                                                        className="
+                                                                            text-red-500
+                                                                            hover:text-red-700
+                                                                            text-lg
+                                                                        "
+                                                                    >
+                                                                        🗑️
+                                                                    </button>
+
+                                                                </div>
+
+                                                                {/* Tipo */}
+                                                                <div className="mt-3">
+
+                                                                    <span
+                                                                        className={`
+                                                                            px-3
+                                                                            py-1
+                                                                            rounded-full
+                                                                            text-xs
+                                                                            font-semibold
+                                                                            ${getOrderTypeBadge(order.order_type)}
+                                                                        `}
+                                                                    >
+                                                                        {order.order_type}
+                                                                    </span>
+
+                                                                </div>
+
+                                                                {/* Valor */}
+                                                                <div className="mt-4">
+
+                                                                    <div
+                                                                        className="
+                                                                            text-xs
+                                                                            text-gray-500
+                                                                        "
+                                                                    >
+                                                                        Valor Total
+                                                                    </div>
+
+                                                                    <div
+                                                                        className="
+                                                                            text-3xl
+                                                                            font-bold
+                                                                            text-purple-700
+                                                                        "
+                                                                    >
+                                                                        R$ {Number(order.total_price || 0).toFixed(2)}
+                                                                    </div>
+
+                                                                </div>
+
+                                                                {/* Quantidade */}
+                                                                <div
+                                                                    className="
+                                                                        mt-2
+                                                                        text-sm
+                                                                        text-gray-500
+                                                                    "
+                                                                >
+                                                                    🍕 {order.items?.length || 0} itens
+                                                                </div>
+
+                                                                {/* Tempo */}
+                                                                <div
+                                                                    className={`
+                                                                        mt-3
+                                                                        font-bold
+                                                                        text-sm
+                                                                        ${getWaitingColor(waitingMinutes)}
+                                                                    `}
+                                                                >
+                                                                    ⏱ {waitingMinutes} min aguardando
+                                                                </div>
+
+                                                                {/* Botões */}
+                                                                <div
+                                                                    className="
+                                                                        flex
+                                                                        gap-2
+                                                                        mt-5
+                                                                    "
+                                                                >
+
+                                                                    <button
+                                                                        onClick={() => editOrder(order)}
+                                                                        className="
+                                                                            flex-1
+                                                                            bg-purple-600
+                                                                            hover:bg-purple-800
+                                                                            text-white
+                                                                            px-4
+                                                                            py-2
+                                                                            rounded
+                                                                            transition-colors
+                                                                        "
+                                                                    >
+                                                                        Editar
+                                                                    </button>
+
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            navigate(
+                                                                                `/orders/${order.id}`
+                                                                            )
+                                                                        }
+                                                                        className="
+                                                                            flex-1
+                                                                            bg-white
+                                                                            border
+                                                                            border-purple-600
+                                                                            text-purple-600
+                                                                            hover:bg-purple-50
+                                                                            px-4
+                                                                            py-2
+                                                                            rounded
+                                                                            transition-colors
+                                                                        "
+                                                                    >
+                                                                        Itens
+                                                                    </button>
+
+                                                                </div>
+                                                                
+
+                                                            </div>
+
+                                                        );
+
+                                                    }}
+                                                </Draggable>
+
+                                            ))
+
+                                    }
+
+                                    {
+                                        provided.placeholder
+                                    }
+
+                                </div>
+
+                            )}
+
+                        </Droppable>
+
+                    ))}
+
+                </div>
+
+            </DragDropContext>
 
             {/* MODAL */}
             {
