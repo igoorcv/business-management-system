@@ -144,6 +144,12 @@ def delete_order(id):
             'error': 'Pedido não encontrado'
         }), 404
 
+    # Remove os itens do pedido
+    OrderItem.query.filter_by(
+        order_id=id
+    ).delete()
+    
+    # Remove o pedido
     db.session.delete(order)
 
     db.session.commit()

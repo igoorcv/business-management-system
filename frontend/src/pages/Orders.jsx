@@ -48,6 +48,8 @@ function Orders() {
         'Finalizado'
     ];
 
+    const [orderTypeFilter, setOrderTypeFilter] = useState('todos');
+
     // Busca produtos
     const fetchProducts = async () => {
 
@@ -470,11 +472,11 @@ function Orders() {
     };
 
     // Atualiza status arrastando card
+    
+
     const handleDragEnd = async (result) => {
 
-        if (!result.destination) {
-            return;
-        }
+        if (!result.destination) return;
 
         const orderId = Number(
             result.draggableId
@@ -482,6 +484,20 @@ function Orders() {
 
         const newStatus =
             result.destination.droppableId;
+
+        const previousOrders = [...orders];
+
+        // Atualiza a tela imediatamente
+        setOrders(prev =>
+            prev.map(order =>
+                order.id === orderId
+                    ? {
+                        ...order,
+                        status: newStatus
+                    }
+                    : order
+            )
+        );
 
         try {
 
@@ -492,16 +508,22 @@ function Orders() {
                 }
             );
 
-            fetchOrders();
-
         } catch (error) {
 
-            console.error(
-                'Erro ao mover pedido:',
-                error
+            console.error(error);
+
+            // Volta ao estado anterior se der erro
+            setOrders(previousOrders);
+
+            alert(
+                'Erro ao atualizar status.'
             );
 
         }
+
+        setTimeout(() => {
+            document.body.style.cursor = 'default';
+        }, 50);
 
     };
 
@@ -667,26 +689,112 @@ function Orders() {
             {/* BOTÕES NO HEADER */}
             <div className="mb-6">
 
-                <button
-                    onClick={() => {
-                        setEditingId(null);
-                        setCustomerName('');
-                        setStatus('Em preparo');
-                        setShowModal(true);
-                    }}
+                <div
                     className="
-                    bg-purple-600
-                    hover:bg-purple-800
-                    text-white
-                    px-4
-                    py-2
-                    rounded
-                    flex-1
-                    transition-colors"
+                        mb-6
+                        flex
+                        items-center
+                        gap-2
+                    "
                 >
-                    Novo pedido
-                </button>
 
+                    <button
+                        onClick={() => {
+                            setEditingId(null);
+                            setCustomerName('');
+                            setStatus('Em preparo');
+                            setShowModal(true);
+                        }}
+                        className="
+                            bg-purple-600
+                            hover:bg-purple-800
+                            text-white
+                            px-4
+                            py-2
+                            rounded
+                            transition-colors
+                        "
+                    >
+                        Novo pedido
+                    </button>
+
+                    <button
+                        onClick={() => setOrderTypeFilter('todos')}
+                        className={`
+                            px-3
+                            py-1
+                            text-sm
+                            rounded-2xl
+                            border
+                            transition-colors
+                            ${
+                                orderTypeFilter === 'todos'
+                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                    : 'bg-white text-gray-600 border-gray-300'
+                            }
+                        `}
+                    >
+                        Todos
+                    </button>
+
+                    <button
+                        onClick={() => setOrderTypeFilter('balcao')}
+                        className={`
+                            px-3
+                            py-1
+                            text-sm
+                            rounded-2xl
+                            border
+                            transition-colors
+                            ${
+                                orderTypeFilter === 'balcao'
+                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                    : 'bg-white text-gray-600 border-gray-300'
+                            }
+                        `}
+                    >
+                        Balcão
+                    </button>
+
+                    <button
+                        onClick={() => setOrderTypeFilter('entrega')}
+                        className={`
+                            px-3
+                            py-1
+                            text-sm
+                            rounded-2xl
+                            border
+                            transition-colors
+                            ${
+                                orderTypeFilter === 'entrega'
+                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                    : 'bg-white text-gray-600 border-gray-300'
+                            }
+                        `}
+                    >
+                        Entrega
+                    </button>
+
+                    <button
+                        onClick={() => setOrderTypeFilter('retirada')}
+                        className={`
+                            px-3
+                            py-1
+                            text-sm
+                            rounded-2xl
+                            border
+                            transition-colors
+                            ${
+                                orderTypeFilter === 'retirada'
+                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                    : 'bg-white text-gray-600 border-gray-300'
+                            }
+                        `}
+                    >
+                        Retirada
+                    </button>
+
+                </div>
 
             </div>
             
@@ -712,7 +820,7 @@ function Orders() {
                             droppableId={status}
                         >
                             {/* Card */}
-                            {(provided) => (
+                            {(provided, snapshot) => (
                                 
                                 <div
                                     ref={provided.innerRef}
@@ -726,7 +834,7 @@ function Orders() {
                                         border
                                     "
                                 >
-
+                                    
                                     <div
                                         className="
                                             flex
@@ -777,6 +885,12 @@ function Orders() {
                                                 order =>
                                                     order.status === status
                                             )
+                                            .filter(
+                                                order =>
+                                                    orderTypeFilter === 'todos'
+                                                        ? true
+                                                        : order.order_type === orderTypeFilter
+                                            )
                                             .map(
                                                 (
                                                     order,
@@ -788,7 +902,7 @@ function Orders() {
                                                     draggableId={String(order.id)}
                                                     index={index}
                                                 >
-                                                    {(provided) => {
+                                                    {(provided, snapshot) => {
 
                                                         const waitingMinutes =
                                                             getWaitingTime(order.created_at);
@@ -799,6 +913,9 @@ function Orders() {
                                                                 ref={provided.innerRef}
                                                                 {...provided.draggableProps}
                                                                 {...provided.dragHandleProps}
+                                                                style={{
+                                                                    ...provided.draggableProps.style,
+                                                                }}
                                                                 className={`
                                                                     bg-white
                                                                     rounded-xl
@@ -810,6 +927,7 @@ function Orders() {
                                                                     border-l-4
                                                                     ${getStatusColor(order.status)}
                                                                 `}
+                                                                
                                                             >
 
                                                                 {/* Cabeçalho */}
@@ -889,61 +1007,111 @@ function Orders() {
                                                                 </div>
 
                                                                 {/* Botões */}
-                                                                <div
-                                                                    className="
-                                                                        flex
-                                                                        gap-2
-                                                                        mt-5
-                                                                    "
-                                                                >
+                                                                {
+                                                                    order.status !== 'Finalizado' && (
 
-                                                                    <button
-                                                                        onClick={() => editOrder(order)}
-                                                                        className="
-                                                                            flex-1
-                                                                            bg-purple-600
-                                                                            hover:bg-purple-800
-                                                                            text-white
-                                                                            px-4
-                                                                            py-1
-                                                                            rounded
-                                                                            transition-colors
-                                                                        "
-                                                                    >
-                                                                        Editar
-                                                                    </button>
+                                                                        <div
+                                                                            className="
+                                                                                flex
+                                                                                gap-2
+                                                                                mt-5
+                                                                            "
+                                                                        >
 
-                                                                    <button
-                                                                        onClick={(e) => {
+                                                                            {/* Editar */}
+                                                                            {
+                                                                                (
+                                                                                    order.status === 'Em preparo' ||
+                                                                                    order.status === 'Pronto'
+                                                                                ) && (
 
-                                                                                e.stopPropagation();
+                                                                                    <button
+                                                                                        onClick={() => editOrder(order)}
+                                                                                        className="
+                                                                                            flex-1
+                                                                                            bg-purple-600
+                                                                                            hover:bg-purple-800
+                                                                                            text-white
+                                                                                            px-4
+                                                                                            py-1
+                                                                                            rounded
+                                                                                            transition-colors
+                                                                                        "
+                                                                                    >
+                                                                                        Editar
+                                                                                    </button>
 
-                                                                                if (
-                                                                                    window.confirm(
-                                                                                        'Deseja excluir este pedido?'
-                                                                                    )
-                                                                                ) {
-                                                                                    deleteOrder(order.id);
-                                                                                }
+                                                                                )
+                                                                            }
 
-                                                                            }}
-                                                                        className="
-                                                                            flex-1
-                                                                            bg-white
-                                                                            border
-                                                                            border-red-600
-                                                                            text-red-600
-                                                                            hover:bg-red-50
-                                                                            px-4
-                                                                            py-1
-                                                                            rounded
-                                                                            transition-colors
-                                                                        "
-                                                                    >
-                                                                        Cancelar
-                                                                    </button>
+                                                                            {/* Escolher entregador */}
+                                                                            {
+                                                                                order.status === 'Pronto' &&
+                                                                                order.order_type === 'entrega' &&  (
 
-                                                                </div>
+                                                                                    <button
+                                                                                        onClick={(e) => {
+
+                                                                                            e.stopPropagation();
+
+                                                                                            // TODO:
+                                                                                            // abrir modal de entregadores
+
+                                                                                        }}
+                                                                                        className="
+                                                                                            flex-1
+                                                                                            bg-white
+                                                                                            border
+                                                                                            border-blue-700
+                                                                                            hover:bg-blue-50
+                                                                                            text-blue-700
+                                                                                            px-4
+                                                                                            py-1
+                                                                                            rounded
+                                                                                            transition-colors
+                                                                                        "
+                                                                                    >
+                                                                                        Entregador
+                                                                                    </button>
+
+                                                                                )
+                                                                            }
+
+                                                                            {/* Cancelar */}
+                                                                            <button
+                                                                                onClick={(e) => {
+
+                                                                                    e.stopPropagation();
+
+                                                                                    if (
+                                                                                        window.confirm(
+                                                                                            'Deseja excluir este pedido?'
+                                                                                        )
+                                                                                    ) {
+                                                                                        deleteOrder(order.id);
+                                                                                    }
+
+                                                                                }}
+                                                                                className="
+                                                                                    flex-1
+                                                                                    bg-white
+                                                                                    border
+                                                                                    border-red-600
+                                                                                    text-red-600
+                                                                                    hover:bg-red-50
+                                                                                    px-4
+                                                                                    py-1
+                                                                                    rounded
+                                                                                    transition-colors
+                                                                                "
+                                                                            >
+                                                                                Cancelar
+                                                                            </button>
+
+                                                                        </div>
+
+                                                                    )
+                                                                }
                                                                 
 
                                                             </div>
