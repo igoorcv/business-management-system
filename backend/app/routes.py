@@ -16,6 +16,7 @@ def test_route():
 @routes.route('/products', methods=['GET'])
 def get_products():
 
+    #products = Product.query.filter_by(is_active=True).all()
     products = Product.query.all()
 
     return jsonify([
@@ -32,7 +33,9 @@ def create_product():
     new_product = Product(
         name=data['name'],
         category=data['category'],
-        price=data['price']
+        code=data['code'],
+        price=data['price'],
+        is_active=data['is_active']
     )
 
     db.session.add(new_product)
@@ -47,10 +50,13 @@ def create_product():
 # Cria método DELETE Product
 @routes.route('/products/<int:id>', methods=['DELETE'])
 def delete_product(id):
-    product = Product.query.get(id)
+    #product = Product.query.get(id)
+    product = Product.query.get_or_404(id)
 
     if not product:
         return jsonify({'error': 'Produto não encontrado'}), 404
+    
+    product.is_active = False
 
     db.session.delete(product)
     db.session.commit()
@@ -68,8 +74,10 @@ def update_product(id):
     data = request.json
 
     product.name = data['name']
+    product.code=data['code'],
     product.category = data['category']
     product.price = data['price']
+    product.is_active = data['is_active']
 
     db.session.commit()
 
@@ -337,7 +345,33 @@ def update_order_status(id):
 
     data = request.json
 
-    order.status = data['status']
+    #order.status = data['status']
+    
+    from datetime import datetime
+    
+    new_status = data['status']
+
+    if (
+        new_status == 'Finalizado'
+        and order.status != 'Finalizado'
+    ):
+        order.finalized_at = datetime.now()
+
+    order.status = new_status
+    
+    if (
+        new_status == 'Finalizado'
+        and order.status != 'Finalizado'
+    ):
+        order.finalized_at = datetime.now()
+
+    elif (
+        new_status != 'Finalizado'
+        and order.status == 'Finalizado'
+    ):
+        order.finalized_at = None
+
+    order.status = new_status
 
     db.session.commit()
 

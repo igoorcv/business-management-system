@@ -651,17 +651,24 @@ function Orders() {
 
     };
 
-    const getWaitingTime = (createdAt) => {
+    const getWaitingTime = (
+        createdAt,
+        finalizedAt
+    ) => {
 
-        if (!createdAt) return 0;
+        if (!createdAt)
+            return 0;
 
-        const created = new Date(createdAt);
+        const start = new Date(createdAt);
 
-        const now = new Date();
+        const end = finalizedAt
+            ? new Date(finalizedAt)
+            : new Date();
 
         return Math.floor(
-            (now - created) / 1000 / 60
+            (end - start) / 60000
         );
+
     };
 
     const getWaitingColor = (minutes) => {
@@ -682,7 +689,7 @@ function Orders() {
 
         <div className="p-10">
 
-            <h1 className="text-3xl font-bold mb-6">
+            <h1 className="text-3xl font-semibold mb-6">
                 Pedidos
             </h1>
 
@@ -706,6 +713,7 @@ function Orders() {
                             setShowModal(true);
                         }}
                         className="
+                            w-48
                             bg-purple-600
                             hover:bg-purple-800
                             text-white
@@ -846,7 +854,7 @@ function Orders() {
 
                                         <h2
                                             className="
-                                                font-bold
+                                                font-semibold
                                                 text-lg
                                             "
                                         >
@@ -905,7 +913,10 @@ function Orders() {
                                                     {(provided, snapshot) => {
 
                                                         const waitingMinutes =
-                                                            getWaitingTime(order.created_at);
+                                                            getWaitingTime(
+                                                                order.created_at,
+                                                                order.finalized_at
+                                                            );
 
                                                         return (
 

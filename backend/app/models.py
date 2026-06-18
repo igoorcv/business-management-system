@@ -36,6 +36,11 @@ class Product(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
+    code = db.Column(
+        db.String(10),
+        nullable=True
+    )
+    
     name = db.Column(
         db.String(100),
         nullable=False
@@ -50,13 +55,20 @@ class Product(db.Model):
         db.Float,
         nullable=False
     )
+    
+    is_active = db.Column(
+        db.Boolean, 
+        default=True
+    )
 
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
             "category": self.category,
-            "price": self.price
+            "price": self.price,
+            "code": self.code,
+            "is_active": self.is_active
         }
 
 class Order(db.Model):
@@ -121,6 +133,11 @@ class Order(db.Model):
         default=lambda: datetime.utcnow() - timedelta(hours=3)
     )
     
+    finalized_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+    
     items = db.relationship(
         'OrderItem',
         backref='order',
@@ -167,6 +184,11 @@ class Order(db.Model):
                 for item in self.items
             ],
             'created_at': self.created_at.isoformat() if self.created_at else None,
+            'finalized_at': (
+                self.finalized_at.isoformat()
+                if self.finalized_at
+                else None
+            ),
             
         }
  
