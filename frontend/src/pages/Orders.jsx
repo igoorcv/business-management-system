@@ -51,6 +51,10 @@ function Orders() {
 
     const [orderTypeFilter, setOrderTypeFilter] = useState('todos');
 
+    const [viewMode, setViewMode] = useState(false);
+
+    const isReadOnly = viewMode;
+
     // Busca produtos
     const fetchProducts = async () => {
 
@@ -142,6 +146,8 @@ function Orders() {
 
     // Cria pedido
     const createOrder = async () => {
+
+        setViewMode(false);
 
         try {
 
@@ -298,6 +304,8 @@ function Orders() {
 
         console.log(order);
 
+        setViewMode(false);
+
         setEditingId(order.id);
 
         setCustomerName(order.customer_name || '');
@@ -423,6 +431,43 @@ function Orders() {
         selectedProducts.length > 0 &&
         paymentMethod.trim() !== '';
 
+    //Visualizar pedido sem edição
+    const viewOrder = (order) => {
+
+        setViewMode(true);
+
+        setEditingId(order.id);
+
+        setCustomerName(order.customer_name || '');
+        setStatus(order.status || '');
+
+        setPaymentMethod(order.payment_method || '');
+        setPaymentSearch(order.payment_method || '');
+
+        setDiscount(order.discount || 0);
+        setDeliveryFee(order.delivery_fee || 0);
+
+        setOrderType(order.order_type || 'balcao');
+
+        setPhone(order.phone || '');
+
+        setSelectedProducts(
+            order.items.map(item => ({
+                id: item.id,
+                order_id: item.order_id,
+                product_id: item.product_id,
+                product_name: item.product_name,
+                product_price: item.product_price,
+                quantity: item.quantity,
+                observation: item.observation || ''
+            }))
+        );
+
+        setShowModal(true);
+
+    };
+
+
     // Busca client por phone
     const handlePhoneChange = async (e) => {
 
@@ -473,8 +518,6 @@ function Orders() {
     };
 
     // Atualiza status arrastando card
-    
-
     const handleDragEnd = async (result) => {
 
         if (!result.destination) return;
@@ -1017,7 +1060,7 @@ function Orders() {
                                                                         </div>
 
                                                                         <div className="text-base text-gray-500">
-                                                                            🍕 {order.items?.length || 0} itens
+                                                                            🍕 {order.items?.length || 0} {order.items?.length === 1 ? "item" : "itens"}
                                                                         </div>
 
                                                                     </div>
@@ -1039,7 +1082,7 @@ function Orders() {
                                                                                 ${getWaitingColor(waitingMinutes)}
                                                                             `}
                                                                         >
-                                                                            ⏱ {waitingMinutes} min
+                                                                            🕓 {waitingMinutes} min
                                                                         </span>
 
                                                                         <span
@@ -1177,6 +1220,39 @@ function Orders() {
 
                                                                     )
                                                                 }
+                                                                {
+                                                                    order.status === 'Finalizado' && (
+
+                                                                        <div
+                                                                            className="
+                                                                                flex
+                                                                                gap-2
+                                                                                mt-5
+                                                                            "
+                                                                        >
+
+                                                                            <button
+                                                                                onClick={() => viewOrder(order)}
+                                                                                className="
+                                                                                    flex-1
+                                                                                    bg-white
+                                                                                    border
+                                                                                    border-purple-600
+                                                                                    text-purple-600
+                                                                                    hover:bg-purple-50
+                                                                                    px-4
+                                                                                    py-1
+                                                                                    rounded
+                                                                                    transition-colors
+                                                                                "
+                                                                            >
+                                                                                Ver pedido
+                                                                            </button>
+
+                                                                        </div>
+
+                                                                    )
+                                                                }
                                                                 
 
                                                             </div>
@@ -1225,10 +1301,12 @@ function Orders() {
                             {/* Header */}
                             <div className="px-6 py-5 border-b border-gray-200 bg-gray-50 rounded-t-lg">
 
-                                <h2 className="text-xl font-bold text-gray-800">
-                                    {editingId
-                                        ? 'Edição de pedido'
-                                        : 'Criação de pedido'}
+                                <h2 className="text-xl font-semibold text-gray-800">
+                                    {viewMode
+                                        ? 'Visualização de pedido'
+                                        : editingId
+                                            ? 'Edição de pedido'
+                                            : 'Criação de pedido'}
                                 </h2>
 
                             </div>
@@ -1247,16 +1325,27 @@ function Orders() {
                                         Qual tipo de pedido você deseja fazer?
                                     </p>
 
-                                    <div className="flex gap-2 mb-6">
+                                    <div className="flex gap-2 mb-4 gap-4">
 
                                         <button
                                             type="button"
                                             onClick={() => setOrderType('balcao')}
-                                            className={`px-4 py-2 rounded border ${
-                                                orderType === 'balcao'
-                                                    ? 'bg-purple-600 text-white'
-                                                    : 'bg-white'
-                                            }`}
+                                            className={`
+                                                    px-4 
+                                                    py-2
+                                                    rounded border
+                                                    ${
+                                                        orderType === 'balcao'
+                                                            ? 'bg-purple-600 text-white'
+                                                            : 'bg-white'
+                                                    }
+                                                    ${
+                                                        isReadOnly
+                                                            ? 'opacity-60 cursor-not-allowed'
+                                                            : ''
+                                                    }
+                                                `}
+                                            disabled={isReadOnly}
                                         >
                                             Balcão
                                         </button>
@@ -1264,11 +1353,22 @@ function Orders() {
                                         <button
                                             type="button"
                                             onClick={() => setOrderType('entrega')}
-                                            className={`px-4 py-2 rounded border ${
-                                                orderType === 'entrega'
-                                                    ? 'bg-purple-600 text-white'
-                                                    : 'bg-white'
-                                            }`}
+                                            className={`
+                                                    px-4 
+                                                    py-2
+                                                    rounded border
+                                                    ${
+                                                        orderType === 'entrega'
+                                                            ? 'bg-purple-600 text-white'
+                                                            : 'bg-white'
+                                                    }
+                                                    ${
+                                                        isReadOnly
+                                                            ? 'opacity-60 cursor-not-allowed'
+                                                            : ''
+                                                    }
+                                                `}
+                                            disabled={isReadOnly}
                                         >
                                             Entrega
                                         </button>
@@ -1276,11 +1376,22 @@ function Orders() {
                                         <button
                                             type="button"
                                             onClick={() => setOrderType('retirada')}
-                                            className={`px-4 py-2 rounded border ${
-                                                orderType === 'retirada'
-                                                    ? 'bg-purple-600 text-white'
-                                                    : 'bg-white'
-                                            }`}
+                                            className={`
+                                                    px-4 
+                                                    py-2
+                                                    rounded border
+                                                    ${
+                                                        orderType === 'retirada'
+                                                            ? 'bg-purple-600 text-white'
+                                                            : 'bg-white'
+                                                    }
+                                                    ${
+                                                        isReadOnly
+                                                            ? 'opacity-60 cursor-not-allowed'
+                                                            : ''
+                                                    }
+                                                `}
+                                            disabled={isReadOnly}
                                         >
                                             Retirada
                                         </button>
@@ -1295,6 +1406,7 @@ function Orders() {
                                                     className={inputClass}
                                                     placeholder="Nome"
                                                     value={customerName}
+                                                    disabled={isReadOnly}
                                                     onChange={(e) => setCustomerName(e.target.value)}
                                                 />
                                             </div>
@@ -1308,6 +1420,7 @@ function Orders() {
                                                     className={inputClass}
                                                     placeholder="Nome"
                                                     value={customerName}
+                                                    disabled={isReadOnly}
                                                     onChange={(e) => setCustomerName(e.target.value)}
                                                 />
                                             </div>
@@ -1317,6 +1430,7 @@ function Orders() {
                                                     className={inputClass}
                                                     placeholder="Telefone"
                                                     value={phone}
+                                                    disabled={isReadOnly}
                                                     onChange={(e) => setPhone(e.target.value)}
                                                 />
                                             </div>
@@ -1331,6 +1445,7 @@ function Orders() {
                                                         className={inputClass}
                                                         placeholder="Telefone"
                                                         value={phone}
+                                                        disabled={isReadOnly}
                                                         onChange={handlePhoneChange}
                                                     />
                                                 </div>
@@ -1340,6 +1455,7 @@ function Orders() {
                                                         className={inputClass}
                                                         placeholder="Nome"
                                                         value={customerName}
+                                                        disabled={isReadOnly}
                                                         onChange={(e) => setCustomerName(e.target.value)}
                                                     />
                                                 </div>
@@ -1349,6 +1465,7 @@ function Orders() {
                                                         className={inputClass}
                                                         placeholder="Endereço"
                                                         value={address}
+                                                        disabled={isReadOnly}
                                                         onChange={(e) => setAddress(e.target.value)}
                                                     />
                                                 </div>
@@ -1358,6 +1475,7 @@ function Orders() {
                                                         className={inputClass}
                                                         placeholder="Complemento"
                                                         value={complement}
+                                                        disabled={isReadOnly}
                                                         onChange={(e) => setComplement(e.target.value)}
                                                     />
                                                 </div>
@@ -1367,6 +1485,7 @@ function Orders() {
                                                         className={inputClass}
                                                         placeholder="Bairro"
                                                         value={district}
+                                                        disabled={isReadOnly}
                                                         onChange={(e) => setDistrict(e.target.value)}
                                                     />
                                                 </div>
@@ -1378,7 +1497,7 @@ function Orders() {
                                 {/* Informações do pedido */}
                                 <div className="border rounded-lg p-4 mb-4">
 
-                                    <h3 className="font-semibold mb-3">
+                                    <h3 className="font-semibold mb-4">
                                         Informações do pedido
                                     </h3>
                                     
@@ -1401,11 +1520,13 @@ function Orders() {
                                                 }}
                                                 onFocus={() => setShowProductDropdown(true)}
                                                 className={inputClass}
+                                                disabled={isReadOnly}
                                             />
 
                                             {selectedProductId && (
                                                 <button
                                                     type="button"
+                                                    disabled={isReadOnly}
                                                     onClick={clearSelectedProduct}
                                                     className="
                                                         absolute
@@ -1463,6 +1584,7 @@ function Orders() {
                                         {/* Quantidade */}
                                         <div className="col-span-2">
                                             <Select
+                                                isDisabled={isReadOnly}
                                                 options={quantityOptions}
                                                 value={
                                                     quantityOptions.find(
@@ -1518,8 +1640,26 @@ function Orders() {
                                         {/* Botão: Adicionar item */}
                                         <div className="col-span-3">
                                             <button
+                                                disabled={isReadOnly}
                                                 onClick={addProduct}
-                                                className="w-full h-full bg-purple-600 text-white rounded-md hover:bg-purple-800"
+                                                className={`
+                                                    w-full 
+                                                    h-full 
+                                                    bg-purple-600 
+                                                    text-white 
+                                                    rounded-md 
+                                                    hover:bg-purple-800
+                                                    ${
+                                                        orderType === 'balcao' || 'entrega' || 'retirada'
+                                                            ? 'bg-purple-600 text-white'
+                                                            : 'bg-white'
+                                                    }
+                                                    ${
+                                                        isReadOnly
+                                                            ? 'opacity-60 cursor-not-allowed'
+                                                            : ''
+                                                    }
+                                                `}
                                             >
                                                 + Adicionar item
                                             </button>
@@ -1530,7 +1670,13 @@ function Orders() {
                                     {/* Grid */}
                                     {selectedProducts.length > 0 && (
 
-                                        <div className="border border-gray-300 rounded-lg overflow-hidden">
+                                        <div className="
+                                            border
+                                            border-gray-300
+                                            rounded-lg
+                                            overflow-hidden
+                                            "
+                                        >
                                             
                                             <table className="w-full">
                                                 
@@ -1594,6 +1740,7 @@ function Orders() {
                                                                 <div className="w-24">
 
                                                                     <Select
+                                                                        isDisabled={isReadOnly}
                                                                         options={quantityOptions}
                                                                         value={
                                                                             quantityOptions.find(
@@ -1675,6 +1822,7 @@ function Orders() {
                                                                             className={inputClass}
                                                                             placeholder="Digite aqui"
                                                                             value={item.observation || ''}
+                                                                            disabled={isReadOnly}
                                                                             onChange={(e) => {
                                                                                 const updated =
                                                                                     selectedProducts.map(prod =>
@@ -1709,8 +1857,8 @@ function Orders() {
                                                                     onClick={() =>
                                                                         removeProduct(item.product_id)
                                                                     }
-                                                                    
-                                                                    className="
+                                                                    disabled={isReadOnly}
+                                                                    className={`
                                                                         bg-red-500
                                                                         hover:bg-red-600
                                                                         text-white
@@ -1718,7 +1866,17 @@ function Orders() {
                                                                         py-1
                                                                         rounded-md
                                                                         transition-colors
-                                                                    "
+                                                                        ${
+                                                                            orderType === 'balcao' || 'entrega' || 'retirada'
+                                                                                ? 'bg-red-500 text-white'
+                                                                                : 'bg-white'
+                                                                        }
+                                                                        ${
+                                                                            isReadOnly
+                                                                                ? 'opacity-60 cursor-not-allowed'
+                                                                                : ''
+                                                                        }
+                                                                    `}
                                                                 >
                                                                     X
                                                                 </button>
@@ -1770,6 +1928,7 @@ function Orders() {
                                                     }}
                                                     onFocus={() => setShowPaymentDropdown(true)}
                                                     className={inputClass}
+                                                    disabled={isReadOnly}
                                                 />
 
                                                 {paymentMethod && (
@@ -1786,8 +1945,9 @@ function Orders() {
                                                             font-bold
                                                             text-lg
                                                         "
+                                                        disabled={isReadOnly}
                                                     >
-                                                        ×
+                                                        {isReadOnly ? "" : "×"}
                                                     </button>
                                                 )}
 
@@ -1881,6 +2041,7 @@ function Orders() {
                                                         focus:ring-2
                                                         focus:ring-purple-500
                                                     "
+                                                    disabled={isReadOnly}
                                                 />
 
                                             </div>
@@ -1930,8 +2091,8 @@ function Orders() {
                                                             focus:outline-none
                                                             focus:ring-2
                                                             focus:ring-purple-500
-                                                            
                                                         "
+                                                        disabled={isReadOnly}
                                                     />
 
                                                 </div>
@@ -1979,8 +2140,9 @@ function Orders() {
                                 <button
                                     onClick={() => {
                                         resetForm();
+                                        setViewMode(false);
                                         setShowModal(false);
-                                        setEditingId(null);
+                                        setEditingId(null); 
                                     }}                               
                                     className="
                                         w-32
@@ -1995,7 +2157,7 @@ function Orders() {
                                         transition-colors
                                     "
                                 >
-                                    Cancelar
+                                    {isReadOnly ? "Fechar" : "Cancelar"}
                                 </button>
 
                                 <button
@@ -2010,6 +2172,7 @@ function Orders() {
                                         setShowModal(false);
 
                                     }}
+                                    hidden={viewMode}
                                     disabled={!isFormValid}
                                     className={`
                                         w-32
