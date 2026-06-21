@@ -295,7 +295,7 @@ function Products() {
             </div>
 
             {/* BODY */}
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-5">
 
               <input
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500"

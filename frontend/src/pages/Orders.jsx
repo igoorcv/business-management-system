@@ -32,6 +32,7 @@ function Orders() {
     const [clientFound, setClientFound] = useState(false);
 
     const [productSearch, setProductSearch] = useState('');
+    const [orderSearch, setOrderSearch] = useState('');
     const [showProductDropdown, setShowProductDropdown] = useState(false);
 
     const [paymentMethod, setPaymentMethod] = useState('');
@@ -527,6 +528,27 @@ function Orders() {
 
     };
 
+    // 🔎 FILTRO DE BUSCA DE PEDIDOS
+    const filteredOrders = orders.filter(order => {
+
+        const search = orderSearch
+            .trim()
+            .toLowerCase();
+
+        if (!search) return true;
+
+        return (
+            String(order.id).includes(search) ||
+            (order.customer_name || '')
+                .toLowerCase()
+                .includes(search) ||
+            (order.phone || '')
+                .toLowerCase()
+                .includes(search)
+        );
+
+    });
+
     // Estilização do campo INPUT
     const inputClass =
         "border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500";
@@ -700,12 +722,19 @@ function Orders() {
                     className="
                         mb-6
                         flex
-                        items-center
+                        flex justify-between
                         gap-2
                     "
                 >
 
-                    <button
+                    <div
+                        className="
+                            flex
+                            items-center
+                            gap-2
+                        "
+                    >
+                        <button
                         onClick={() => {
                             setEditingId(null);
                             setCustomerName('');
@@ -724,83 +753,108 @@ function Orders() {
                         "
                     >
                         Novo pedido
-                    </button>
+                        </button>
 
-                    <button
-                        onClick={() => setOrderTypeFilter('todos')}
-                        className={`
-                            px-3
-                            py-1
-                            text-sm
-                            rounded-2xl
-                            border
-                            transition-colors
-                            ${
-                                orderTypeFilter === 'todos'
-                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                    : 'bg-white text-gray-600 border-gray-300'
-                            }
-                        `}
-                    >
-                        Todos
-                    </button>
+                        <button
+                            onClick={() => setOrderTypeFilter('todos')}
+                            className={`
+                                px-3
+                                py-1
+                                text-sm
+                                rounded-2xl
+                                border
+                                transition-colors
+                                ${
+                                    orderTypeFilter === 'todos'
+                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                        : 'bg-white text-gray-600 border-gray-300'
+                                }
+                            `}
+                        >
+                            Todos
+                        </button>
 
-                    <button
-                        onClick={() => setOrderTypeFilter('balcao')}
-                        className={`
-                            px-3
-                            py-1
-                            text-sm
-                            rounded-2xl
-                            border
-                            transition-colors
-                            ${
-                                orderTypeFilter === 'balcao'
-                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                    : 'bg-white text-gray-600 border-gray-300'
-                            }
-                        `}
-                    >
-                        Balcão
-                    </button>
+                        <button
+                            onClick={() => setOrderTypeFilter('balcao')}
+                            className={`
+                                px-3
+                                py-1
+                                text-sm
+                                rounded-2xl
+                                border
+                                transition-colors
+                                ${
+                                    orderTypeFilter === 'balcao'
+                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                        : 'bg-white text-gray-600 border-gray-300'
+                                }
+                            `}
+                        >
+                            Balcão
+                        </button>
 
-                    <button
-                        onClick={() => setOrderTypeFilter('entrega')}
-                        className={`
-                            px-3
-                            py-1
-                            text-sm
-                            rounded-2xl
-                            border
-                            transition-colors
-                            ${
-                                orderTypeFilter === 'entrega'
-                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                    : 'bg-white text-gray-600 border-gray-300'
-                            }
-                        `}
-                    >
-                        Entrega
-                    </button>
+                        <button
+                            onClick={() => setOrderTypeFilter('entrega')}
+                            className={`
+                                px-3
+                                py-1
+                                text-sm
+                                rounded-2xl
+                                border
+                                transition-colors
+                                ${
+                                    orderTypeFilter === 'entrega'
+                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                        : 'bg-white text-gray-600 border-gray-300'
+                                }
+                            `}
+                        >
+                            Entrega
+                        </button>
 
-                    <button
-                        onClick={() => setOrderTypeFilter('retirada')}
-                        className={`
-                            px-3
-                            py-1
-                            text-sm
-                            rounded-2xl
+                        <button
+                            onClick={() => setOrderTypeFilter('retirada')}
+                            className={`
+                                px-3
+                                py-1
+                                text-sm
+                                rounded-2xl
+                                border
+                                transition-colors
+                                ${
+                                    orderTypeFilter === 'retirada'
+                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                        : 'bg-white text-gray-600 border-gray-300'
+                                }
+                            `}
+                        >
+                            Retirada
+                        </button>                       
+                    
+                    </div>
+                
+                    <input
+                        type="text"
+                        placeholder="Buscar comanda ou cliente"
+                        value={orderSearch}
+                        onChange={(e) => {
+                            console.log(e.target.value);
+                            setOrderSearch(e.target.value);
+                        }}
+                        className="
+                            w-64
+                            max-w-md
                             border
-                            transition-colors
-                            ${
-                                orderTypeFilter === 'retirada'
-                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                    : 'bg-white text-gray-600 border-gray-300'
-                            }
-                        `}
-                    >
-                        Retirada
-                    </button>
+                            border-gray-300
+                            rounded-md
+                            px-3
+                            py-2
+                            focus:outline-none
+                            focus:ring-2
+                            focus:ring-purple-500
+                            bg-white
+                        "
+                    />
 
                 </div>
 
@@ -878,7 +932,7 @@ function Orders() {
                                         >
 
                                             {
-                                                orders.filter(
+                                                filteredOrders.filter(
                                                     o =>
                                                         o.status === status
                                                 ).length
@@ -888,7 +942,7 @@ function Orders() {
                                     </div>
 
                                     {
-                                        orders
+                                        filteredOrders
                                             .filter(
                                                 order =>
                                                     order.status === status
