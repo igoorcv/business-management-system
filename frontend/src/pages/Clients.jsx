@@ -99,9 +99,15 @@ function Clients() {
   return (
     <div className="p-10">
 
-      <h1 className="text-3xl font-semibold mb-6 text-gray-800">
-        Clientes
-      </h1>
+      <div className="mb-8">
+        <h1 className="text-3xl font-semibold text-gray-800">
+          Clientes
+        </h1>
+
+        <p className="text-gray-500 mt-2">
+          Cadastre clientes e gerencie seus endereços.
+        </p>
+      </div>
 
       {/* SEARCH + BUTTON */}
       <div className="mb-6 flex justify-between gap-2">
@@ -161,14 +167,14 @@ function Clients() {
 
                   <button
                     onClick={() => startEdit(c)}
-                    className="mr-2 px-3 py-1 border border-blue-600 text-blue-600 rounded hover:bg-blue-50"
+                    className="w-30 mr-2 px-3 py-1 border border-blue-600 text-blue-600 rounded hover:bg-blue-50"
                   >
                     Editar
                   </button>
 
                   <button
                     onClick={() => deleteClient(c.id)}
-                    className="px-3 py-1 border border-red-600 text-red-600 rounded hover:bg-red-50"
+                    className="w-30 px-3 py-1 border border-red-600 text-red-600 rounded hover:bg-red-50"
                   >
                     Excluir
                   </button>

@@ -4,9 +4,8 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import Select from 'react-select';
-import { NumericFormat } from 'react-number-format';
 import {
     DragDropContext,
     Droppable,
@@ -15,7 +14,6 @@ import {
 
 function Orders() {
 
-    const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [customerName, setCustomerName] = useState('');
     const [status, setStatus] = useState('Em preparo');
@@ -74,6 +72,11 @@ function Orders() {
         '11980802020 - Robson',
         '11980802020 - Pedro'
     ];
+
+    const location = useLocation();
+
+    const queryParams = new URLSearchParams(location.search);
+    const movementId = queryParams.get('movement_id');
 
     // Busca produtos
     const fetchProducts = async () => {
@@ -143,25 +146,18 @@ function Orders() {
     };
 
     // Busca pedidos
-    const fetchOrders = async () => {
-
+    const fetchOrders = async (movementId) => {
         try {
+            const url = movementId
+                ? `http://localhost:5000/orders?movement_id=${movementId}`
+                : `http://localhost:5000/orders`;
 
-            const response = await axios.get(
-                'http://localhost:5000/orders'
-            );
-
+            const response = await axios.get(url);
             setOrders(response.data);
 
         } catch (error) {
-
-            console.error(
-                'Erro ao buscar pedidos:',
-                error
-            );
-
+            console.error(error);
         }
-
     };
 
     // Cria pedido
@@ -397,7 +393,7 @@ function Orders() {
     };
 
     useEffect(() => {
-        fetchOrders();
+        fetchOrders(movementId);
         fetchProducts();
     }, []);
 
@@ -617,9 +613,6 @@ function Orders() {
     const inputClass =
         "border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500";
 
-    const selectClass =
-        "border border-gray-300 rounded-md px-3 py-2 pr-12 w-full bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-400";
-
     const quantityOptions = [
         { value: 1 / 3, label: '⅓' },
         { value: 1 / 2, label: '½' },
@@ -825,9 +818,15 @@ function Orders() {
 
         <div className="p-10">
 
-            <h1 className="text-3xl font-semibold mb-6">
+            <div className="mb-8">
+                <h1 className="text-3xl font-semibold text-gray-800">
                 Pedidos
-            </h1>
+                </h1>
+
+                <p className="text-gray-500 mt-2">
+                Registre seus pedidos e acompanhe suas entregas.
+                </p>
+            </div>
 
             {/* BOTÕES NO HEADER */}
             <div className="mb-6">

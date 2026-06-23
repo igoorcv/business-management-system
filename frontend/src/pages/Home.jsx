@@ -19,10 +19,7 @@ function Home() {
   const [selectedMovement, setSelectedMovement] = useState(null);
   const [movementSummary, setMovementSummary] = useState(null);
   const [showCloseModal, setShowCloseModal] = useState(false);
-  const [modalMode, setModalMode] = useState('close');
-  const [viewMode, setViewMode] = useState(false);
-  const isReadOnly = viewMode;
-
+  
 
   // ==================================================
   // Functions para conectar ações do front-end e APIs
@@ -203,6 +200,7 @@ function Home() {
               <button
                 onClick={() => navigate('/orders')}
                 className="
+                  w-48
                   bg-purple-600
                   hover:bg-purple-800
                   text-white
@@ -217,10 +215,12 @@ function Home() {
 
               <button
                 onClick={() => {
+                  setSelectedMovement(activeMovement);
                   setShowCloseModal(true);
                   fetchCloseSummary();
                 }}
                 className="
+                  w-48
                   bg-red-600
                   hover:bg-red-700
                   text-white
@@ -431,6 +431,7 @@ function Home() {
                       setShowCloseModal(true);
                     }}
                     className="
+                      w-30
                       border
                       border-blue-600
                       text-blue-600
@@ -445,8 +446,9 @@ function Home() {
                   </button>
 
                   <button
-                    onClick={}
+                    onClick={() => navigate(`/orders?movement_id=${movement.id}`)}
                     className="
+                      w-30
                       border
                       border-blue-600
                       text-blue-600
@@ -457,7 +459,7 @@ function Home() {
                       transition-colors
                     "
                   >
-                    Ver pedidos antigos
+                    Ver pedidos
                   </button>
 
                 </td>

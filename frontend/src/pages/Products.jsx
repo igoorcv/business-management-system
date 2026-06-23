@@ -13,11 +13,6 @@ const categoryOrder = {
 };
 
 const categories = ['Bebida', 'Esfiha', 'Pizza', 'Sobremesa'];
-const states = [
-  { label: 'Ativo', value: true },
-  { label: 'Inativo', value: false }
-];
-
 
 function Products() {
   const [products, setProducts] = useState([]);
@@ -109,9 +104,15 @@ function Products() {
   return (
     <div className="p-10">
 
-      <h1 className="text-3xl font-semibold mb-6 text-gray-800">
+      <div className="mb-8">
+        <h1 className="text-3xl font-semibold text-gray-800">
           Produtos
         </h1>
+
+        <p className="text-gray-500 mt-2">
+          Cadastre produtos e gerencie seus preços.
+        </p>
+      </div>
       
       {/* SEARCH */}
       <div className="
@@ -228,6 +229,7 @@ function Products() {
                   <button
                     onClick={() => startEdit(p)}
                     className="
+                      w-30
                       flex-1
                       bg-white
                       border
@@ -247,6 +249,7 @@ function Products() {
                   <button
                     onClick={() => deleteProduct(p.id)}
                     className="
+                      w-30
                       flex-1
                       bg-white
                       border

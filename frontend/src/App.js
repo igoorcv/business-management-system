@@ -21,10 +21,6 @@ function App() {
         <Link to="/home">
           Home
         </Link>
-        
-        <Link to="/orders">
-          Pedidos
-        </Link>
 
         <Link to="/products">
           Produtos
