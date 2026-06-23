@@ -1,8 +1,12 @@
-# Criação da estrutura do Database
+# =========================
+# CRIAÇÃO DA ESTRUTURA DO BANCO DE DADOS
+# =========================
 
 from . import db
 from datetime import datetime, timedelta
 
+
+# Table movements
 class Movement(db.Model):
     __tablename__ = 'movements'
 
@@ -19,31 +23,6 @@ class Movement(db.Model):
 
     closed_at = db.Column(
         db.DateTime
-    )
-
-    total_orders = db.Column(
-        db.Integer,
-        default=0
-    )
-
-    total_counter_orders = db.Column(
-        db.Integer,
-        default=0
-    )
-
-    total_pickup_orders = db.Column(
-        db.Integer,
-        default=0
-    )
-
-    total_delivery_orders = db.Column(
-        db.Integer,
-        default=0
-    )
-
-    revenue = db.Column(
-        db.Numeric(10, 2),
-        default=0
     )
 
     status = db.Column(
@@ -63,14 +42,10 @@ class Movement(db.Model):
             "id": self.id,
             "opened_at": self.opened_at.isoformat() if self.opened_at else None,
             "closed_at": self.closed_at.isoformat() if self.closed_at else None,
-            "total_orders": self.total_orders,
-            "total_counter_orders": self.total_counter_orders,
-            "total_pickup_orders": self.total_pickup_orders,
-            "total_delivery_orders": self.total_delivery_orders,
-            "revenue": float(self.revenue),
             "status": self.status
         }
- 
+
+# Table clients 
 class Client(db.Model):
     __tablename__ = 'clients'
 
@@ -115,6 +90,7 @@ class Client(db.Model):
             "is_active": self.is_active
         }    
 
+# Table products
 class Product(db.Model):
     __tablename__ = 'products'
 
@@ -155,6 +131,7 @@ class Product(db.Model):
             "is_active": self.is_active
         }
 
+# Table orders
 class Order(db.Model):
     __tablename__ = 'orders'
 
@@ -287,7 +264,8 @@ class Order(db.Model):
             ),
             
         }
- 
+
+# Table order-items
 class OrderItem(db.Model):
 
     __tablename__ = 'order_items'

@@ -1,3 +1,7 @@
+// =========================
+// PÁGINA DE PEDIDOS 
+// =========================
+
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -63,7 +67,7 @@ function Orders() {
 
     const [selectedDeliveryPerson, setSelectedDeliveryPerson] =
         useState('');
-    
+
     const deliveryPeople = [
         '11980802020 - Madruga',
         '11980802020 - Lucas',
@@ -277,7 +281,7 @@ function Orders() {
 
             setDiscount(0);
             setDeliveryFee(0);
-            
+
             setShowModal(false);
 
             fetchOrders();
@@ -292,7 +296,7 @@ function Orders() {
             alert('Erro ao criar pedido');
 
         }
-    };    
+    };
 
     // Deleta pedido
     const deleteOrder = async (id) => {
@@ -427,8 +431,8 @@ function Orders() {
 
         setQuantity(1);
 
-    }; 
-    
+    };
+
     // Soma total do pedido
     const orderTotal = selectedProducts.reduce(
         (total, item) =>
@@ -617,8 +621,8 @@ function Orders() {
         "border border-gray-300 rounded-md px-3 py-2 pr-12 w-full bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-400";
 
     const quantityOptions = [
-        { value: 1/3, label: '⅓' },
-        { value: 1/2, label: '½' },
+        { value: 1 / 3, label: '⅓' },
+        { value: 1 / 2, label: '½' },
 
         ...Array.from(
             { length: 500 },
@@ -683,7 +687,7 @@ function Orders() {
             .toLowerCase()
             .includes(paymentSearch.toLowerCase())
     );
-    
+
     const clearPaymentMethod = () => {
         setPaymentMethod('');
         setPaymentSearch('');
@@ -701,7 +705,7 @@ function Orders() {
 
             case 'Pronto':
                 return 'border-yellow-400 bg-yellow-10';
-                
+
             case 'Saiu para entrega':
                 return 'border-blue-400 bg-blue-50';
 
@@ -845,13 +849,13 @@ function Orders() {
                         "
                     >
                         <button
-                        onClick={() => {
-                            setEditingId(null);
-                            setCustomerName('');
-                            setStatus('Em preparo');
-                            setShowModal(true);
-                        }}
-                        className="
+                            onClick={() => {
+                                setEditingId(null);
+                                setCustomerName('');
+                                setStatus('Em preparo');
+                                setShowModal(true);
+                            }}
+                            className="
                             w-48
                             bg-purple-600
                             hover:bg-purple-800
@@ -861,8 +865,8 @@ function Orders() {
                             rounded
                             transition-colors
                         "
-                    >
-                        Novo pedido
+                        >
+                            Novo pedido
                         </button>
 
                         <button
@@ -874,10 +878,9 @@ function Orders() {
                                 rounded-2xl
                                 border
                                 transition-colors
-                                ${
-                                    orderTypeFilter === 'todos'
-                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                        : 'bg-white text-gray-600 border-gray-300'
+                                ${orderTypeFilter === 'todos'
+                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                    : 'bg-white text-gray-600 border-gray-300'
                                 }
                             `}
                         >
@@ -893,10 +896,9 @@ function Orders() {
                                 rounded-2xl
                                 border
                                 transition-colors
-                                ${
-                                    orderTypeFilter === 'balcao'
-                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                        : 'bg-white text-gray-600 border-gray-300'
+                                ${orderTypeFilter === 'balcao'
+                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                    : 'bg-white text-gray-600 border-gray-300'
                                 }
                             `}
                         >
@@ -912,10 +914,9 @@ function Orders() {
                                 rounded-2xl
                                 border
                                 transition-colors
-                                ${
-                                    orderTypeFilter === 'entrega'
-                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                        : 'bg-white text-gray-600 border-gray-300'
+                                ${orderTypeFilter === 'entrega'
+                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                    : 'bg-white text-gray-600 border-gray-300'
                                 }
                             `}
                         >
@@ -931,18 +932,17 @@ function Orders() {
                                 rounded-2xl
                                 border
                                 transition-colors
-                                ${
-                                    orderTypeFilter === 'retirada'
-                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                        : 'bg-white text-gray-600 border-gray-300'
+                                ${orderTypeFilter === 'retirada'
+                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                    : 'bg-white text-gray-600 border-gray-300'
                                 }
                             `}
                         >
                             Retirada
-                        </button>                       
-                    
+                        </button>
+
                     </div>
-                
+
                     <input
                         type="text"
                         placeholder="Buscar comanda ou cliente"
@@ -969,7 +969,7 @@ function Orders() {
                 </div>
 
             </div>
-            
+
             {/* KANBAN */}
             <DragDropContext
                 onDragEnd={handleDragEnd}
@@ -993,7 +993,7 @@ function Orders() {
                         >
                             {/* Card */}
                             {(provided, snapshot) => (
-                                
+
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
@@ -1006,7 +1006,7 @@ function Orders() {
                                         border
                                     "
                                 >
-                                    
+
                                     <div
                                         className="
                                             flex
@@ -1024,8 +1024,8 @@ function Orders() {
                                         >
                                             {status}
                                         </h2>
-                                       
-                                       {/* Contador */}
+
+                                        {/* Contador */}
                                         <span
                                             className="
                                                 bg-purple-800
@@ -1069,34 +1069,34 @@ function Orders() {
                                                     index
                                                 ) => (
 
-                                                <Draggable
-                                                    key={order.id}
-                                                    draggableId={String(order.id)}
-                                                    index={index}
-                                                >
-                                                    {(provided, snapshot) => {
+                                                    <Draggable
+                                                        key={order.id}
+                                                        draggableId={String(order.id)}
+                                                        index={index}
+                                                    >
+                                                        {(provided, snapshot) => {
 
-                                                        const waitingMinutes =
-                                                            getWaitingTime(
-                                                                order.created_at,
-                                                                order.finalized_at
-                                                            );
-                                                        
-                                                        const totalItems = order.items?.reduce(
-                                                            (total, item) => total + item.quantity,
-                                                            0
-                                                        ) || 0;
+                                                            const waitingMinutes =
+                                                                getWaitingTime(
+                                                                    order.created_at,
+                                                                    order.finalized_at
+                                                                );
 
-                                                        return (
+                                                            const totalItems = order.items?.reduce(
+                                                                (total, item) => total + item.quantity,
+                                                                0
+                                                            ) || 0;
 
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                {...provided.draggableProps}
-                                                                {...provided.dragHandleProps}
-                                                                style={{
-                                                                    ...provided.draggableProps.style,
-                                                                }}
-                                                                className={`
+                                                            return (
+
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    style={{
+                                                                        ...provided.draggableProps.style,
+                                                                    }}
+                                                                    className={`
                                                                     bg-white
                                                                     rounded-xl
                                                                     shadow-sm
@@ -1107,71 +1107,71 @@ function Orders() {
                                                                     border-l-4
                                                                     ${getStatusColor(order.status)}
                                                                 `}
-                                                                
-                                                            >
 
-                                                                {/* Cabeçalho */}
-                                                                <div className="flex justify-between mb-3">
+                                                                >
 
-                                                                    {/* Coluna esquerda */}
-                                                                    <div className="flex flex-col gap-2">
+                                                                    {/* Cabeçalho */}
+                                                                    <div className="flex justify-between mb-3">
 
-                                                                        <span className="font-semibold text-sm text-gray-700">
-                                                                            Comanda #{order.id}
-                                                                        </span>
+                                                                        {/* Coluna esquerda */}
+                                                                        <div className="flex flex-col gap-2">
 
-                                                                        <div
-                                                                            className="
+                                                                            <span className="font-semibold text-sm text-gray-700">
+                                                                                Comanda #{order.id}
+                                                                            </span>
+
+                                                                            <div
+                                                                                className="
                                                                                 font-semibold
                                                                                 text-gray-800
                                                                                 text-base
                                                                                 py-1
                                                                             "
-                                                                        >
-                                                                            {order.customer_name}
-                                                                        </div>
+                                                                            >
+                                                                                {order.customer_name}
+                                                                            </div>
 
-                                                                        <div className="text-base text-gray-500">
-                                                                            🍕 {totalItems} {totalItems === 1 ? "item" : "itens"}
-                                                                        </div>
+                                                                            <div className="text-base text-gray-500">
+                                                                                🍕 {totalItems} {totalItems === 1 ? "item" : "itens"}
+                                                                            </div>
 
-                                                                        {
-                                                                            order.delivery_person && (
+                                                                            {
+                                                                                order.delivery_person && (
 
-                                                                                <div className="
+                                                                                    <div className="
                                                                                     text-base 
                                                                                     text-gray-500
                                                                                 ">
-                                                                                    🛵 {order.delivery_person}
-                                                                                </div>
+                                                                                        🛵 {order.delivery_person}
+                                                                                    </div>
 
-                                                                            )
-                                                                        }
+                                                                                )
+                                                                            }
 
-                                                                    </div>
+                                                                        </div>
 
-                                                                    {/* Coluna direita */}
-                                                                    <div
-                                                                        className="
+                                                                        {/* Coluna direita */}
+                                                                        <div
+                                                                            className="
                                                                             flex
                                                                             flex-col
                                                                             items-end
                                                                             gap-2
                                                                         "
-                                                                    >
+                                                                        >
 
-                                                                        <span
-                                                                            className={`
+                                                                            <span
+                                                                                className={`
                                                                                 text-sm
                                                                                 font-semibold
                                                                                 ${getWaitingColor(waitingMinutes)}
                                                                             `}
-                                                                        >
-                                                                            🕓 {waitingMinutes} min
-                                                                        </span>
+                                                                            >
+                                                                                🕓 {waitingMinutes} min
+                                                                            </span>
 
-                                                                        <span
-                                                                            className={`
+                                                                            <span
+                                                                                className={`
                                                                                 inline-flex
                                                                                 items-center
                                                                                 px-3
@@ -1181,46 +1181,46 @@ function Orders() {
                                                                                 font-medium
                                                                                 ${getOrderTypeBadge(order.order_type)}
                                                                             `}
-                                                                        >
-                                                                            {order.order_type}
-                                                                        </span>
+                                                                            >
+                                                                                {order.order_type}
+                                                                            </span>
 
-                                                                        <div
-                                                                            className="
+                                                                            <div
+                                                                                className="
                                                                                 text-lg
                                                                                 font-bold
                                                                                 text-purple-700
                                                                             "
-                                                                        >
-                                                                            R$ {Number(order.total_price || 0).toFixed(2)}
+                                                                            >
+                                                                                R$ {Number(order.total_price || 0).toFixed(2)}
+                                                                            </div>
+
                                                                         </div>
 
                                                                     </div>
 
-                                                                </div>
+                                                                    {/* Botões */}
+                                                                    {
+                                                                        order.status !== 'Finalizado' && (
 
-                                                                {/* Botões */}
-                                                                {
-                                                                    order.status !== 'Finalizado' && (
-
-                                                                        <div
-                                                                            className="
+                                                                            <div
+                                                                                className="
                                                                                 flex
                                                                                 gap-2
                                                                                 mt-5
                                                                             "
-                                                                        >
+                                                                            >
 
-                                                                            {/* Editar */}
-                                                                            {
-                                                                                (
-                                                                                    order.status === 'Em preparo' ||
-                                                                                    order.status === 'Pronto'
-                                                                                ) && (
+                                                                                {/* Editar */}
+                                                                                {
+                                                                                    (
+                                                                                        order.status === 'Em preparo' ||
+                                                                                        order.status === 'Pronto'
+                                                                                    ) && (
 
-                                                                                    <button
-                                                                                        onClick={() => editOrder(order)}
-                                                                                        className="
+                                                                                        <button
+                                                                                            onClick={() => editOrder(order)}
+                                                                                            className="
                                                                                             flex-1
                                                                                             bg-purple-600
                                                                                             hover:bg-purple-800
@@ -1230,23 +1230,23 @@ function Orders() {
                                                                                             rounded
                                                                                             transition-colors
                                                                                         "
-                                                                                    >
-                                                                                        Editar
-                                                                                    </button>
+                                                                                        >
+                                                                                            Editar
+                                                                                        </button>
 
-                                                                                )
-                                                                            }
+                                                                                    )
+                                                                                }
 
-                                                                            {/* Escolher entregador */}
-                                                                            {
-                                                                                order.status === 'Pronto' &&
-                                                                                order.order_type === 'entrega' &&  (
+                                                                                {/* Escolher entregador */}
+                                                                                {
+                                                                                    order.status === 'Pronto' &&
+                                                                                    order.order_type === 'entrega' && (
 
-                                                                                    <button
-                                                                                        onClick={() => {
-                                                                                            openDeliveryModal(order)
-                                                                                        }}
-                                                                                        className="
+                                                                                        <button
+                                                                                            onClick={() => {
+                                                                                                openDeliveryModal(order)
+                                                                                            }}
+                                                                                            className="
                                                                                             flex-1
                                                                                             bg-white
                                                                                             border
@@ -1258,29 +1258,29 @@ function Orders() {
                                                                                             rounded
                                                                                             transition-colors
                                                                                         "
-                                                                                    >
-                                                                                        Entregador
-                                                                                    </button>
+                                                                                        >
+                                                                                            Entregador
+                                                                                        </button>
 
-                                                                                )
-                                                                            }
+                                                                                    )
+                                                                                }
 
-                                                                            {/* Cancelar */}
-                                                                            <button
-                                                                                onClick={(e) => {
+                                                                                {/* Cancelar */}
+                                                                                <button
+                                                                                    onClick={(e) => {
 
-                                                                                    e.stopPropagation();
+                                                                                        e.stopPropagation();
 
-                                                                                    if (
-                                                                                        window.confirm(
-                                                                                            'Deseja excluir este pedido?'
-                                                                                        )
-                                                                                    ) {
-                                                                                        deleteOrder(order.id);
-                                                                                    }
+                                                                                        if (
+                                                                                            window.confirm(
+                                                                                                'Deseja excluir este pedido?'
+                                                                                            )
+                                                                                        ) {
+                                                                                            deleteOrder(order.id);
+                                                                                        }
 
-                                                                                }}
-                                                                                className="
+                                                                                    }}
+                                                                                    className="
                                                                                     flex-1
                                                                                     bg-white
                                                                                     border
@@ -1292,28 +1292,28 @@ function Orders() {
                                                                                     rounded
                                                                                     transition-colors
                                                                                 "
-                                                                            >
-                                                                                Cancelar
-                                                                            </button>
+                                                                                >
+                                                                                    Cancelar
+                                                                                </button>
 
-                                                                        </div>
+                                                                            </div>
 
-                                                                    )
-                                                                }
-                                                                {
-                                                                    order.status === 'Finalizado' && (
+                                                                        )
+                                                                    }
+                                                                    {
+                                                                        order.status === 'Finalizado' && (
 
-                                                                        <div
-                                                                            className="
+                                                                            <div
+                                                                                className="
                                                                                 flex
                                                                                 gap-2
                                                                                 mt-5
                                                                             "
-                                                                        >
+                                                                            >
 
-                                                                            <button
-                                                                                onClick={() => viewOrder(order)}
-                                                                                className="
+                                                                                <button
+                                                                                    onClick={() => viewOrder(order)}
+                                                                                    className="
                                                                                     flex-1
                                                                                     bg-white
                                                                                     border
@@ -1325,24 +1325,24 @@ function Orders() {
                                                                                     rounded
                                                                                     transition-colors
                                                                                 "
-                                                                            >
-                                                                                Ver pedido
-                                                                            </button>
+                                                                                >
+                                                                                    Ver pedido
+                                                                                </button>
 
-                                                                        </div>
+                                                                            </div>
 
-                                                                    )
-                                                                }
-                                                                
+                                                                        )
+                                                                    }
 
-                                                            </div>
 
-                                                        );
+                                                                </div>
 
-                                                    }}
-                                                </Draggable>
+                                                            );
 
-                                            ))
+                                                        }}
+                                                    </Draggable>
+
+                                                ))
 
                                     }
 
@@ -1390,7 +1390,7 @@ function Orders() {
                                 </h2>
 
                             </div>
-                            
+
                             {/* Body */}
                             <div className="flex-1 overflow-y-auto p-6">
 
@@ -1414,16 +1414,14 @@ function Orders() {
                                                     px-4 
                                                     py-2
                                                     rounded border
-                                                    ${
-                                                        orderType === 'balcao'
-                                                            ? 'bg-purple-600 text-white'
-                                                            : 'bg-white'
-                                                    }
-                                                    ${
-                                                        isReadOnly
-                                                            ? 'opacity-60 cursor-not-allowed'
-                                                            : ''
-                                                    }
+                                                    ${orderType === 'balcao'
+                                                    ? 'bg-purple-600 text-white'
+                                                    : 'bg-white'
+                                                }
+                                                    ${isReadOnly
+                                                    ? 'opacity-60 cursor-not-allowed'
+                                                    : ''
+                                                }
                                                 `}
                                             disabled={isReadOnly}
                                         >
@@ -1437,16 +1435,14 @@ function Orders() {
                                                     px-4 
                                                     py-2
                                                     rounded border
-                                                    ${
-                                                        orderType === 'entrega'
-                                                            ? 'bg-purple-600 text-white'
-                                                            : 'bg-white'
-                                                    }
-                                                    ${
-                                                        isReadOnly
-                                                            ? 'opacity-60 cursor-not-allowed'
-                                                            : ''
-                                                    }
+                                                    ${orderType === 'entrega'
+                                                    ? 'bg-purple-600 text-white'
+                                                    : 'bg-white'
+                                                }
+                                                    ${isReadOnly
+                                                    ? 'opacity-60 cursor-not-allowed'
+                                                    : ''
+                                                }
                                                 `}
                                             disabled={isReadOnly}
                                         >
@@ -1460,16 +1456,14 @@ function Orders() {
                                                     px-4 
                                                     py-2
                                                     rounded border
-                                                    ${
-                                                        orderType === 'retirada'
-                                                            ? 'bg-purple-600 text-white'
-                                                            : 'bg-white'
-                                                    }
-                                                    ${
-                                                        isReadOnly
-                                                            ? 'opacity-60 cursor-not-allowed'
-                                                            : ''
-                                                    }
+                                                    ${orderType === 'retirada'
+                                                    ? 'bg-purple-600 text-white'
+                                                    : 'bg-white'
+                                                }
+                                                    ${isReadOnly
+                                                    ? 'opacity-60 cursor-not-allowed'
+                                                    : ''
+                                                }
                                                 `}
                                             disabled={isReadOnly}
                                         >
@@ -1477,7 +1471,7 @@ function Orders() {
                                         </button>
 
                                     </div>
-                                    
+
                                     {/* Campos */}
                                     {orderType === 'balcao' && (
                                         <div className="grid grid-cols-12 gap-4">
@@ -1518,74 +1512,74 @@ function Orders() {
                                     )}
 
                                     {orderType === 'entrega' && (
-                                        
+
                                         <div className="grid grid-cols-12 gap-4">
-                                                <div className="col-span-2">
-                                                    <input
-                                                        className={inputClass}
-                                                        placeholder="Telefone"
-                                                        value={phone}
-                                                        disabled={isReadOnly}
-                                                        onChange={handlePhoneChange}
-                                                    />
-                                                </div>
-
-                                                <div className="col-span-2">
-                                                    <input
-                                                        className={inputClass}
-                                                        placeholder="Nome"
-                                                        value={customerName}
-                                                        disabled={isReadOnly}
-                                                        onChange={(e) => setCustomerName(e.target.value)}
-                                                    />
-                                                </div>
-
-                                                <div className="col-span-4">
-                                                    <input
-                                                        className={inputClass}
-                                                        placeholder="Endereço"
-                                                        value={address}
-                                                        disabled={isReadOnly}
-                                                        onChange={(e) => setAddress(e.target.value)}
-                                                    />
-                                                </div>
-
-                                                <div className="col-span-2">
-                                                    <input
-                                                        className={inputClass}
-                                                        placeholder="Complemento"
-                                                        value={complement}
-                                                        disabled={isReadOnly}
-                                                        onChange={(e) => setComplement(e.target.value)}
-                                                    />
-                                                </div>
-
-                                                <div className="col-span-2">
-                                                    <input
-                                                        className={inputClass}
-                                                        placeholder="Bairro"
-                                                        value={district}
-                                                        disabled={isReadOnly}
-                                                        onChange={(e) => setDistrict(e.target.value)}
-                                                    />
-                                                </div>
+                                            <div className="col-span-2">
+                                                <input
+                                                    className={inputClass}
+                                                    placeholder="Telefone"
+                                                    value={phone}
+                                                    disabled={isReadOnly}
+                                                    onChange={handlePhoneChange}
+                                                />
                                             </div>
+
+                                            <div className="col-span-2">
+                                                <input
+                                                    className={inputClass}
+                                                    placeholder="Nome"
+                                                    value={customerName}
+                                                    disabled={isReadOnly}
+                                                    onChange={(e) => setCustomerName(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="col-span-4">
+                                                <input
+                                                    className={inputClass}
+                                                    placeholder="Endereço"
+                                                    value={address}
+                                                    disabled={isReadOnly}
+                                                    onChange={(e) => setAddress(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="col-span-2">
+                                                <input
+                                                    className={inputClass}
+                                                    placeholder="Complemento"
+                                                    value={complement}
+                                                    disabled={isReadOnly}
+                                                    onChange={(e) => setComplement(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="col-span-2">
+                                                <input
+                                                    className={inputClass}
+                                                    placeholder="Bairro"
+                                                    value={district}
+                                                    disabled={isReadOnly}
+                                                    onChange={(e) => setDistrict(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
                                     )}
 
                                 </div>
-                                
+
                                 {/* Informações do pedido */}
                                 <div className="border rounded-lg p-4 mb-4">
 
                                     <h3 className="font-semibold mb-4">
                                         Informações do pedido
                                     </h3>
-                                    
+
                                     {/* Campos */}
                                     <div className="grid grid-cols-12 gap-4 mb-4">
-                                        
+
                                         {/* Selecione um produto */}
-                                        <div 
+                                        <div
                                             ref={productDropdownRef}
                                             className="col-span-7 relative">
 
@@ -1660,7 +1654,7 @@ function Orders() {
                                                 </div>
                                             )}
                                         </div>
-                                        
+
                                         {/* Quantidade */}
                                         <div className="col-span-2">
                                             <Select
@@ -1710,13 +1704,13 @@ function Orders() {
                                                             : 'white',
                                                         //color: 'black'
                                                         color: state.isSelected
-                                                                ? 'black'
-                                                                : '#6B21A8', // bg-purple-800
+                                                            ? 'black'
+                                                            : '#6B21A8', // bg-purple-800
                                                     }),
                                                 }}
                                             />
                                         </div>
-                                        
+
                                         {/* Botão: Adicionar item */}
                                         <div className="col-span-3">
                                             <button
@@ -1729,15 +1723,13 @@ function Orders() {
                                                     text-white 
                                                     rounded-md 
                                                     hover:bg-purple-800
-                                                    ${
-                                                        orderType === 'balcao' || 'entrega' || 'retirada'
-                                                            ? 'bg-purple-600 text-white'
-                                                            : 'bg-white'
+                                                    ${orderType === 'balcao' || 'entrega' || 'retirada'
+                                                        ? 'bg-purple-600 text-white'
+                                                        : 'bg-white'
                                                     }
-                                                    ${
-                                                        isReadOnly
-                                                            ? 'opacity-60 cursor-not-allowed'
-                                                            : ''
+                                                    ${isReadOnly
+                                                        ? 'opacity-60 cursor-not-allowed'
+                                                        : ''
                                                     }
                                                 `}
                                             >
@@ -1757,9 +1749,9 @@ function Orders() {
                                             overflow-hidden
                                             "
                                         >
-                                            
+
                                             <table className="w-full">
-                                                
+
                                                 {/* Header */}
                                                 <thead>
 
@@ -1798,7 +1790,7 @@ function Orders() {
 
                                                     {/* Styles grid */}
                                                     {selectedProducts.map(item => (
-                                                        
+
                                                         <tr
                                                             key={item.product_id}
                                                             className="
@@ -1808,7 +1800,7 @@ function Orders() {
                                                                 transition-colors
                                                             "
                                                         >
-                                                            
+
                                                             {/* Produto */}
                                                             <td className="px-4 py-2 text-left text-sm">
                                                                 {item.product_name}
@@ -1893,38 +1885,38 @@ function Orders() {
                                                                 </div>
 
                                                             </td>
-                                                            
+
                                                             {/* Observação */}
                                                             <td className="px-4 py-2 text-left text-sm">
 
                                                                 <div className="w-90">
                                                                     <input
-                                                                            className={inputClass}
-                                                                            placeholder="Digite aqui"
-                                                                            value={item.observation || ''}
-                                                                            disabled={isReadOnly}
-                                                                            onChange={(e) => {
-                                                                                const updated =
-                                                                                    selectedProducts.map(prod =>
-                                                                                        prod.product_id === item.product_id
-                                                                                            ? {
-                                                                                                ...prod,
-                                                                                                observation: e.target.value
-                                                                                            }
-                                                                                            : prod
-                                                                                    );
+                                                                        className={inputClass}
+                                                                        placeholder="Digite aqui"
+                                                                        value={item.observation || ''}
+                                                                        disabled={isReadOnly}
+                                                                        onChange={(e) => {
+                                                                            const updated =
+                                                                                selectedProducts.map(prod =>
+                                                                                    prod.product_id === item.product_id
+                                                                                        ? {
+                                                                                            ...prod,
+                                                                                            observation: e.target.value
+                                                                                        }
+                                                                                        : prod
+                                                                                );
 
-                                                                                setSelectedProducts(updated);
-                                                                            }}
-                                                                        />
+                                                                            setSelectedProducts(updated);
+                                                                        }}
+                                                                    />
                                                                 </div>
                                                             </td>
-                                
+
                                                             {/* Unitário */}
                                                             <td className="px-4 py-2 text-left text-sm">
                                                                 R$ {item.product_price.toFixed(2)}
                                                             </td>
-                                                            
+
                                                             {/* Subtotal */}
                                                             <td className="px-4 py-2 text-left text-sm font-medium">
                                                                 R$ {(item.product_price * item.quantity).toFixed(2)}
@@ -1946,15 +1938,13 @@ function Orders() {
                                                                         py-1
                                                                         rounded-md
                                                                         transition-colors
-                                                                        ${
-                                                                            orderType === 'balcao' || 'entrega' || 'retirada'
-                                                                                ? 'bg-red-500 text-white'
-                                                                                : 'bg-white'
+                                                                        ${orderType === 'balcao' || 'entrega' || 'retirada'
+                                                                            ? 'bg-red-500 text-white'
+                                                                            : 'bg-white'
                                                                         }
-                                                                        ${
-                                                                            isReadOnly
-                                                                                ? 'opacity-60 cursor-not-allowed'
-                                                                                : ''
+                                                                        ${isReadOnly
+                                                                            ? 'opacity-60 cursor-not-allowed'
+                                                                            : ''
                                                                         }
                                                                     `}
                                                                 >
@@ -1985,15 +1975,15 @@ function Orders() {
                                     {/* Campos */}
                                     <div className="grid grid-cols-12 gap-4">
 
-                                        {/* Forma de pagamento */}                            
+                                        {/* Forma de pagamento */}
                                         <div
                                             ref={paymentDropdownRef}
                                             className="col-span-4"
-                                        >    
+                                        >
 
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Forma de pagamento
-                                        </label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Forma de pagamento
+                                            </label>
 
                                             <div className="col-span-4 relative">
 
@@ -2210,8 +2200,8 @@ function Orders() {
 
                                     </div>
 
-                                </div>                            
-                            
+                                </div>
+
                             </div>
 
                             {/* Botões */}
@@ -2222,8 +2212,8 @@ function Orders() {
                                         resetForm();
                                         setViewMode(false);
                                         setShowModal(false);
-                                        setEditingId(null); 
-                                    }}                               
+                                        setEditingId(null);
+                                    }}
                                     className="
                                         w-32
                                         px-8
@@ -2252,7 +2242,7 @@ function Orders() {
                                         resetForm();
                                         setViewMode(false);
                                         setShowModal(false);
-                                        setEditingId(null); 
+                                        setEditingId(null);
 
                                     }}
                                     hidden={viewMode}
@@ -2264,10 +2254,9 @@ function Orders() {
                                         rounded
                                         text-white
                                         transition-colors
-                                        ${
-                                            isFormValid
-                                                ? 'bg-purple-600 hover:bg-purple-800'
-                                                : 'bg-gray-400 cursor-not-allowed'
+                                        ${isFormValid
+                                            ? 'bg-purple-600 hover:bg-purple-800'
+                                            : 'bg-gray-400 cursor-not-allowed'
                                         }
                                     `}
                                 >
@@ -2406,8 +2395,8 @@ function Orders() {
                                                 : 'white',
                                             //color: 'black'
                                             color: state.isSelected
-                                                    ? 'black'
-                                                    : '#6B21A8', // bg-purple-800
+                                                ? 'black'
+                                                : '#6B21A8', // bg-purple-800
                                         }),
                                     }}
                                 />
@@ -2451,11 +2440,10 @@ function Orders() {
                                     rounded
                                     text-white
                                     transition-colors
-                                    ${
-                                        isDeliveryValid
+                                    ${isDeliveryValid
                                             ? 'bg-purple-600 hover:bg-purple-800'
                                             : 'bg-gray-400 cursor-not-allowed'
-                                    }
+                                        }
                                 `}
                                 >
                                     Liberar entrega

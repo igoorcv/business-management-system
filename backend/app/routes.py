@@ -1,4 +1,6 @@
-# Criação de rotas
+# =========================
+# CRIAÇÃO DE ROTAS 
+# =========================
 
 from flask import Blueprint, jsonify, request
 from datetime import datetime
@@ -9,16 +11,105 @@ from . import db
 
 routes = Blueprint('routes', __name__)
 
-# Cria método GET Test
-@routes.route('/api/test', methods=['GET'])
-def test_route():
-    return jsonify({'message': 'Hello from Flask!'})
 
-# Cria método GET Products
+# =========================
+# API clients
+# =========================
+
+# Consulta todos os clientes independente do status
+@routes.route('/clients', methods=['GET'])
+def get_clients():
+    clients = Client.query.all()
+    return jsonify([c.to_dict() for c in clients])
+
+# Cria um novo cliente na base de dados
+@routes.route('/clients', methods=['POST'])
+def create_client():
+
+    data = request.get_json()
+
+    client = Client(
+        nome=data['name'],
+        telefone=data['phone'],
+        endereco=data.get('address'),
+        complemento=data.get('complement'),
+        bairro=data.get('neighborhood'),
+        is_active=data.get('is_active', True)
+    )
+
+    db.session.add(client)
+    db.session.commit()
+
+    return jsonify({
+        'id': client.id
+    }), 201
+
+# Consulta um cliente específico a partir do Phone
+@routes.route('/clients/search')
+def search_client():
+
+    phone = request.args.get('phone')
+
+    client = Client.query.filter_by(
+        telefone=phone
+    ).first()
+
+    if not client:
+        return jsonify(None)
+
+    return jsonify({
+        'id': client.id,
+        'nome': client.nome,
+        'telefone': client.telefone,
+        'endereco': client.endereco,
+        'complemento': client.complemento,
+        'bairro': client.bairro
+    })
+
+# Atualiza um cliente específico a partir do ID
+@routes.route('/clients/<int:id>', methods=['PUT'])
+def update_client(id):
+    client = Client.query.get_or_404(id)
+
+    data = request.get_json()
+
+    client.nome = data.get('name', client.nome)
+    client.telefone = data.get('phone', client.telefone)
+    client.endereco = data.get('address', client.endereco)
+    client.complemento = data.get('complement', client.complemento)
+    client.bairro = data.get('neighborhood', client.bairro)
+    client.is_active = data.get('is_active', client.is_active)
+
+    try:
+        db.session.commit()
+        return jsonify(client.to_dict()), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
+
+# Exclui um cliente específico a partir do ID
+@routes.route('/clients/<int:id>', methods=['DELETE'])
+def delete_client(id):
+    client = Client.query.get_or_404(id)
+
+    try:
+        db.session.delete(client)
+        db.session.commit()
+        return jsonify({"message": "Client deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
+    
+
+# =========================
+# API products
+# =========================
+
+# Consulta todos os produtos independente do status
 @routes.route('/products', methods=['GET'])
 def get_products():
 
-    #products = Product.query.filter_by(is_active=True).all()
     products = Product.query.all()
 
     return jsonify([
@@ -26,7 +117,7 @@ def get_products():
         for product in products
     ])
 
-# Cria método POST Product
+# Cria um novo produto na base de dados
 @routes.route('/products', methods=['POST'])
 def create_product():
 
@@ -49,23 +140,7 @@ def create_product():
     }), 201
     # Obs: React → Flask → SQLAlchemy → PostgreSQL
 
-# Cria método DELETE Product
-@routes.route('/products/<int:id>', methods=['DELETE'])
-def delete_product(id):
-    #product = Product.query.get(id)
-    product = Product.query.get_or_404(id)
-
-    if not product:
-        return jsonify({'error': 'Produto não encontrado'}), 404
-    
-    product.is_active = False
-
-    db.session.delete(product)
-    db.session.commit()
-
-    return jsonify({'message': 'Produto deletado com sucesso!'})
-
-# Cria método UPDATE Product
+# Atualiza um produto específico a partir do ID
 @routes.route('/products/<int:id>', methods=['PUT'])
 def update_product(id):
     product = Product.query.get(id)
@@ -87,7 +162,365 @@ def update_product(id):
         'message': 'Produto atualizado com sucesso'
     })
 
-# Cria método GET Orders
+# Exclui um produto específico a partir do ID
+@routes.route('/products/<int:id>', methods=['DELETE'])
+def delete_product(id):
+    #product = Product.query.get(id)
+    product = Product.query.get_or_404(id)
+
+    if not product:
+        return jsonify({'error': 'Produto não encontrado'}), 404
+    
+    product.is_active = False
+
+    db.session.delete(product)
+    db.session.commit()
+
+    return jsonify({'message': 'Produto deletado com sucesso!'})
+
+
+# =========================
+# API movements
+# =========================
+
+# Consulta todos os expoediente independente do status
+@routes.route('/movements', methods=['GET'])
+def get_movements():
+
+    movements = (
+        db.session.query(
+            Movement,
+            func.count(Order.id).label('total_orders'),
+            func.coalesce(
+                func.sum(Order.total),
+                0
+            ).label('revenue')
+        )
+        .outerjoin(
+            Order,
+            Order.movement_id == Movement.id
+        )
+        .group_by(Movement.id)
+        .order_by(Movement.opened_at.desc())
+        .all()
+    )
+
+    result = []
+
+    for movement, total_orders, revenue in movements:
+
+        data = movement.to_dict()
+
+        data['total_orders'] = total_orders
+        data['revenue'] = float(revenue)
+
+        result.append(data)
+
+    return jsonify(result)
+
+# Consulta um expediente específico que possui status OPEN
+@routes.route('/movements/active', methods=['GET'])
+def get_active_movement():
+
+    movement = Movement.query.filter_by(
+        status='OPEN'
+    ).first()
+
+    if not movement:
+        return jsonify(None)
+
+    orders = Order.query.filter_by(
+        movement_id=movement.id
+    )
+
+    total_orders = orders.count()
+
+    counter_orders = orders.filter_by(
+        order_type='balcao'
+    ).count()
+
+    pickup_orders = orders.filter_by(
+        order_type='retirada'
+    ).count()
+
+    delivery_orders = orders.filter_by(
+        order_type='entrega'
+    ).count()
+
+    revenue = (
+        db.session.query(
+            func.coalesce(
+                func.sum(Order.total),
+                0
+            )
+        )
+        .filter(
+            Order.movement_id == movement.id
+        )
+        .scalar()
+    )
+
+    return jsonify({
+        **movement.to_dict(),
+        "total_orders": total_orders,
+        "counter_orders": counter_orders,
+        "pickup_orders": pickup_orders,
+        "delivery_orders": delivery_orders,
+        "revenue": float(revenue)
+    })
+
+# Cria um novo expediente na base de dados
+@routes.route('/movements/open', methods=['POST'])
+def open_movement():
+
+    opened_movement = Movement.query.filter_by(
+        status='OPEN'
+    ).first()
+
+    if opened_movement:
+        return jsonify({
+            "error": "Já existe um expediente aberto"
+        }), 400
+
+    movement = Movement(
+        opened_at=datetime.now(),
+        status='OPEN'
+    )
+
+    db.session.add(movement)
+    db.session.commit()
+
+    return jsonify(
+        movement.to_dict()
+    ), 201
+
+# Atualiza o status de um expediente específico a partir do ID
+@routes.route('/movements/<int:id>/close', methods=['POST'])
+def close_movement(id):
+
+    movement = Movement.query.get_or_404(id)
+
+    if movement.status == 'CLOSED':
+        return jsonify({
+            "error": "Expediente já encerrado"
+        }), 400
+    
+    orders = Order.query.filter_by(movement_id=id).all()
+    
+    movement.total_orders = len(orders)
+    
+    movement.total_counter_orders = len([
+        o for o in orders if o.order_type == 'counter'
+    ])
+
+    movement.total_pickup_orders = len([
+        o for o in orders if o.order_type == 'pickup'
+    ])
+
+    movement.total_delivery_orders = len([
+        o for o in orders if o.order_type == 'delivery'
+    ])
+
+    movement.revenue = sum(o.total or 0 for o in orders)
+
+    movement.closed_at = datetime.now()
+
+    movement.status = 'CLOSED'
+
+    db.session.commit()
+
+    return jsonify(
+        movement.to_dict()
+    )
+ 
+# Consulta informações de um movement_id específico a partir do ID para ser utilizado na modal de Sumário 
+@routes.route('/movements/<int:movement_id>/summary', methods=['GET'])
+def get_movement_summary(movement_id):
+
+    movement = Movement.query.get_or_404(movement_id)
+
+    orders_query = Order.query.filter(
+        Order.movement_id == movement_id
+    )
+
+    # -----------------------------
+    # RESUMO DE PEDIDOS
+    # -----------------------------
+
+    total_orders = orders_query.count()
+
+    counter_orders = orders_query.filter(
+        Order.order_type == 'balcao'
+    ).count()
+
+    pickup_orders = orders_query.filter(
+        Order.order_type == 'retirada'
+    ).count()
+
+    delivery_orders = orders_query.filter(
+        Order.order_type == 'entrega'
+    ).count()
+
+    revenue = (
+        db.session.query(
+            func.coalesce(
+                func.sum(Order.total),
+                0
+            )
+        )
+        .filter(
+            Order.movement_id == movement_id
+        )
+        .scalar()
+    )
+
+    # -----------------------------
+    # TOP 5 PRODUTOS
+    # -----------------------------
+
+    top_products_query = (
+        db.session.query(
+            Product.name,
+            func.sum(
+                OrderItem.quantity
+            ).label('quantity')
+        )
+        .join(
+            OrderItem,
+            Product.id == OrderItem.product_id
+        )
+        .join(
+            Order,
+            Order.id == OrderItem.order_id
+        )
+        .filter(
+            Order.movement_id == movement_id
+        )
+        .group_by(
+            Product.id,
+            Product.name
+        )
+        .order_by(
+            func.sum(
+                OrderItem.quantity
+            ).desc()
+        )
+        .limit(5)
+        .all()
+    )
+
+    top_products = [
+        {
+            "product_name": name,
+            "quantity": float(quantity)
+        }
+        for name, quantity in top_products_query
+    ]
+
+    # -----------------------------
+    # PAGAMENTO DOS ENTREGADORES
+    # -----------------------------
+
+    delivery_people_query = (
+        db.session.query(
+            Order.delivery_person
+        )
+        .filter(
+            Order.movement_id == movement_id
+        )
+        .filter(
+            Order.order_type == 'entrega'
+        )
+        .filter(
+            Order.delivery_person.isnot(None)
+        )
+        .distinct()
+        .all()
+    )
+
+    delivery_people = []
+
+    for (delivery_person,) in delivery_people_query:
+
+        orders = (
+            Order.query
+            .filter(
+                Order.movement_id == movement_id,
+                Order.order_type == 'entrega',
+                Order.delivery_person == delivery_person
+            )
+            .all()
+        )
+
+        total_sold = sum(
+            order.total
+            for order in orders
+        )
+
+        delivery_people.append({
+            "name": delivery_person,
+
+            "order_ids": [
+                order.id
+                for order in orders
+            ],
+
+            "orders_total": round(
+                float(total_sold),
+                2
+            ),
+
+            "payment": round(
+                float(total_sold) * 0.10,
+                2
+            )
+        })
+
+    # -----------------------------
+    # RESPONSE
+    # -----------------------------
+
+    return jsonify({
+        "movement_id": movement.id,
+
+        "opened_at": (
+            movement.opened_at.isoformat()
+            if movement.opened_at
+            else None
+        ),
+
+        "closed_at": (
+            movement.closed_at.isoformat()
+            if movement.closed_at
+            else None
+        ),
+
+        "status": movement.status,
+
+        "total_orders": total_orders,
+
+        "counter_orders": counter_orders,
+
+        "pickup_orders": pickup_orders,
+
+        "delivery_orders": delivery_orders,
+
+        "revenue": round(
+            float(revenue),
+            2
+        ),
+
+        "top_products": top_products,
+
+        "delivery_people": delivery_people
+    })
+
+
+# =========================
+# API orders
+# =========================
+
+# Consulta todos os pedidos que possuem moviment_id com status OPEN
 @routes.route('/orders', methods=['GET'])
 def get_orders():
 
@@ -98,7 +531,6 @@ def get_orders():
     if movement_id:
         query = query.filter_by(movement_id=movement_id)
     else:
-        # 🔥 REGRA IMPORTANTE: nunca listar pedidos sem movimento ativo
         active_movement = Movement.query.filter_by(status='OPEN').first()
 
         if not active_movement:
@@ -111,7 +543,7 @@ def get_orders():
 
     return jsonify([o.to_dict() for o in orders])
 
-# Cria método GET Order
+# Consulta um pedido específico a partir do ID
 @routes.route('/orders/<int:id>', methods=['GET'])
 def get_order(id):
 
@@ -124,7 +556,7 @@ def get_order(id):
 
     return jsonify(order.to_dict())
 
-# Cria método POST Order
+# Cria um novo pedido associado ao moviment_id que possui status OPEN
 @routes.route('/orders', methods=['POST'])
 def create_order():
     data = request.json
@@ -160,7 +592,7 @@ def create_order():
         'message': 'Pedido criado com sucesso'
     }), 201
 
-# Cria método DELETE Order
+# Exclui um pedido específico e todos os order-items associados a ele a partir do ID
 @routes.route('/orders/<int:id>', methods=['DELETE'])
 def delete_order(id):
 
@@ -186,7 +618,7 @@ def delete_order(id):
         'message': 'Pedido deletado com sucesso'
     })
 
-# Cria método UPDATE Order
+# Atualiza um pedido específico a partir do ID
 @routes.route('/orders/<int:id>', methods=['PUT'])
 def update_order(id):
 
@@ -259,149 +691,15 @@ def update_order(id):
         'message': 'Pedido atualizado com sucesso'
     })
 
-# Cria método GET Order-Items
-@routes.route('/order-items', methods=['GET'])
-def get_order_items():
-
-    items = OrderItem.query.all()
-
-    return jsonify([
-        item.to_dict()
-        for item in items
-    ])
-
-# Cria método POST OrderItem
-@routes.route('/order-items', methods=['POST'])
-def create_order_item():
-
-    data = request.get_json()
-
-    item = OrderItem(
-        order_id=data['order_id'],
-        product_id=data['product_id'],
-        quantity=data['quantity'],
-        observation=data.get('observation')
-    )
-
-    db.session.add(item)
-    db.session.commit()
-    
-    order = Order.query.get(item.order_id)
-
-    order.calculate_total()
-
-    db.session.commit()
-
-    return jsonify(item.to_dict()), 201
-
-# Cria método DELETE OrderItem
-@routes.route('/order-items/<int:id>', methods=['DELETE'])
-def delete_order_item(id):
-
-    item = OrderItem.query.get_or_404(id)
-
-    db.session.delete(item)
-
-    db.session.commit()
-
-    return jsonify({
-        'message': 'Item removido'
-    })
-
-# Cria método POST Client
-@routes.route('/clients', methods=['POST'])
-def create_client():
-
-    data = request.get_json()
-
-    client = Client(
-        nome=data['name'],
-        telefone=data['phone'],
-        endereco=data.get('address'),
-        complemento=data.get('complement'),
-        bairro=data.get('neighborhood'),
-        is_active=data.get('is_active', True)
-    )
-
-    db.session.add(client)
-    db.session.commit()
-
-    return jsonify({
-        'id': client.id
-    }), 201
-
-# Cria método GET Clients
-@routes.route('/clients', methods=['GET'])
-def get_clients():
-    clients = Client.query.all()
-    return jsonify([c.to_dict() for c in clients])
-
-# Cria método GET Client by Phone
-@routes.route('/clients/search')
-def search_client():
-
-    phone = request.args.get('phone')
-
-    client = Client.query.filter_by(
-        telefone=phone
-    ).first()
-
-    if not client:
-        return jsonify(None)
-
-    return jsonify({
-        'id': client.id,
-        'nome': client.nome,
-        'telefone': client.telefone,
-        'endereco': client.endereco,
-        'complemento': client.complemento,
-        'bairro': client.bairro
-    })
-
-# Cria método UPDATE Client
-@routes.route('/clients/<int:id>', methods=['PUT'])
-def update_client(id):
-    client = Client.query.get_or_404(id)
-
-    data = request.get_json()
-
-    client.nome = data.get('name', client.nome)
-    client.telefone = data.get('phone', client.telefone)
-    client.endereco = data.get('address', client.endereco)
-    client.complemento = data.get('complement', client.complemento)
-    client.bairro = data.get('neighborhood', client.bairro)
-    client.is_active = data.get('is_active', client.is_active)
-
-    try:
-        db.session.commit()
-        return jsonify(client.to_dict()), 200
-    
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 400
-
-# Cria método DELETE Client
-@routes.route('/clients/<int:id>', methods=['DELETE'])
-def delete_client(id):
-    client = Client.query.get_or_404(id)
-
-    try:
-        db.session.delete(client)
-        db.session.commit()
-        return jsonify({"message": "Client deleted successfully"}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 400
-
-# Cria método UPDATE Status Order
+# Atualiza o status de um pedido específico a partir do ID
 @routes.route('/orders/<int:id>/status', methods=['PUT'])
 def update_order_status(id):
-
+    
+    #  Essa API é utilizada ao arrastar o card no board
+    
     order = Order.query.get_or_404(id)
 
     data = request.json
-
-    #order.status = data['status']
     
     from datetime import datetime
     
@@ -434,12 +732,9 @@ def update_order_status(id):
     return jsonify({
         'message': 'Status atualizado'
     })
-    
-# Atualiza delivery_person no Order
-@routes.route(
-    '/orders/<int:order_id>/delivery',
-    methods=['PUT']
-)
+
+# Atualiza o entregador de um pedido específico a partir do ID
+@routes.route('/orders/<int:order_id>/delivery', methods=['PUT'])
 def assign_delivery_person(order_id):
 
     data = request.json
@@ -457,174 +752,58 @@ def assign_delivery_person(order_id):
     return jsonify({
         "message": "Entrega liberada"
     }) 
-    
 
-# Abrir novo moviments
-@routes.route('/movements/open', methods=['POST'])
-def open_movement():
 
-    opened_movement = Movement.query.filter_by(
-        status='OPEN'
-    ).first()
+# =========================
+# API order items
+# =========================
 
-    if opened_movement:
-        return jsonify({
-            "error": "Já existe um expediente aberto"
-        }), 400
+# Consulta todas as linhas cadastradas na base de dados
+@routes.route('/order-items', methods=['GET'])
+def get_order_items():
 
-    movement = Movement(
-        opened_at=datetime.now(),
-        status='OPEN'
-    )
-
-    db.session.add(movement)
-    db.session.commit()
-
-    return jsonify(
-        movement.to_dict()
-    ), 201
-
-# Buscar moviments abertos
-@routes.route('/movements/active', methods=['GET'])
-def get_active_movement():
-
-    movement = Movement.query.filter_by(
-        status='OPEN'
-    ).first()
-
-    if not movement:
-        return jsonify(None)
-
-    return jsonify(
-        movement.to_dict()
-    )
-
-# Listar histórico
-@routes.route('/movements', methods=['GET'])
-def get_movements():
-
-    movements = (
-        Movement.query
-        .order_by(Movement.opened_at.desc())
-        .all()
-    )
+    items = OrderItem.query.all()
 
     return jsonify([
-        m.to_dict()
-        for m in movements
+        item.to_dict()
+        for item in items
     ])
 
-# Fechar moviments
-@routes.route('/movements/<int:id>/close', methods=['POST'])
-def close_movement(id):
+# Cria novas linhas associando a um pedido específico a partir do ID
+@routes.route('/order-items', methods=['POST'])
+def create_order_item():
 
-    movement = Movement.query.get_or_404(id)
+    data = request.get_json()
 
-    if movement.status == 'CLOSED':
-        return jsonify({
-            "error": "Expediente já encerrado"
-        }), 400
+    item = OrderItem(
+        order_id=data['order_id'],
+        product_id=data['product_id'],
+        quantity=data['quantity'],
+        observation=data.get('observation')
+    )
+
+    db.session.add(item)
+    db.session.commit()
     
-    orders = Order.query.filter_by(movement_id=id).all()
-    
-    movement.total_orders = len(orders)
-    
-    movement.total_counter_orders = len([
-        o for o in orders if o.order_type == 'counter'
-    ])
+    order = Order.query.get(item.order_id)
 
-    movement.total_pickup_orders = len([
-        o for o in orders if o.order_type == 'pickup'
-    ])
-
-    movement.total_delivery_orders = len([
-        o for o in orders if o.order_type == 'delivery'
-    ])
-
-    movement.revenue = sum(o.total or 0 for o in orders)
-
-    movement.closed_at = datetime.now()
-
-    movement.status = 'CLOSED'
+    order.calculate_total()
 
     db.session.commit()
 
-    return jsonify(
-        movement.to_dict()
-    )
+    return jsonify(item.to_dict()), 201
 
-# Summary do moviment para dados para um id específico
-@routes.route('/movements/<int:id>/summary', methods=['GET'])
-def get_movement_summary(id):
+# Exclui uma linha específica a partir do ID da linha
+@routes.route('/order-items/<int:id>', methods=['DELETE'])
+def delete_order_item(id):
 
-    movement = Movement.query.get_or_404(id)
+    item = OrderItem.query.get_or_404(id)
 
-    orders = Order.query.filter_by(movement_id=id).all()
+    db.session.delete(item)
 
-    total_orders = len(orders)
-
-    delivery_orders = len([o for o in orders if o.order_type == 'entrega'])
-    pickup_orders = len([o for o in orders if o.order_type == 'retirada'])
-    counter_orders = len([o for o in orders if o.order_type == 'balcao'])
-
-    revenue = sum(o.total or 0 for o in orders)
+    db.session.commit()
 
     return jsonify({
-        "total_orders": total_orders,
-        "delivery_orders": delivery_orders,
-        "pickup_orders": pickup_orders,
-        "counter_orders": counter_orders,
-        "revenue": revenue
+        'message': 'Item removido'
     })
 
-# Top products this night
-@routes.route('/movements/<int:id>/top-products', methods=['GET'])
-def get_top_products(id):
-
-    results = (
-        db.session.query(
-            Product.name,
-            func.sum(OrderItem.quantity).label('total')
-        )
-        .join(OrderItem, OrderItem.product_id == Product.id)
-        .join(Order, Order.id == OrderItem.order_id)
-        .filter(Order.movement_id == id)
-        .group_by(Product.name)
-        .order_by(func.sum(OrderItem.quantity).desc())
-        .limit(5)
-        .all()
-    )
-
-    return jsonify([
-        {
-            "name": name,
-            "quantity": total
-        }
-        for name, total in results
-    ])
-
-# Valor a ser pago para entregadores
-@routes.route('/movements/<int:id>/delivery-drivers', methods=['GET'])
-def get_delivery_drivers(id):
-
-    results = (
-        db.session.query(
-            Order.delivery_person,
-            func.sum(Order.total).label('amount')
-        )
-        .filter(
-            Order.movement_id == id,
-            Order.delivery_person.isnot(None)
-        )
-        .group_by(Order.delivery_person)
-        .all()
-    )
-
-    return jsonify([
-        {
-            "name": name,
-            "amount": float(amount or 0)
-        }
-        for name, amount in results
-    ])
-    

@@ -1,19 +1,34 @@
+// =========================
+// PÁGINA PRINCIPAL
+// =========================
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 function Home() {
+
+
+  // =========================================================
+  // Referências para funções, estados e variáveis auxiliares 
+  // =========================================================
+
   const navigate = useNavigate();
-
-  const [activeMovement, setActiveMovement] = useState(null);
   const [movements, setMovements] = useState([]);
-  const [showCloseModal, setShowCloseModal] = useState(false);
-
+  const [activeMovement, setActiveMovement] = useState(null);
+  const [selectedMovement, setSelectedMovement] = useState(null);
   const [movementSummary, setMovementSummary] = useState(null);
-  const [topProducts, setTopProducts] = useState([]);
-  const [deliveryDrivers, setDeliveryDrivers] = useState([]);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [modalMode, setModalMode] = useState('close');
+  const [viewMode, setViewMode] = useState(false);
+  const isReadOnly = viewMode;
 
-  // Listar histórico
+
+  // ==================================================
+  // Functions para conectar ações do front-end e APIs
+  // ==================================================
+
+  // Consulta todos os expediente independente do status
   const fetchMovements = async () => {
     try {
       const response = await axios.get(
@@ -25,8 +40,8 @@ function Home() {
       console.error(error);
     }
   };
-  
-  // Buscar moviments abertos
+
+  // Consulta um expediente específico que possui status OPEN
   const fetchActiveMovement = async () => {
     try {
       const response = await axios.get(
@@ -39,12 +54,7 @@ function Home() {
     }
   };
 
-  useEffect(() => {
-    fetchMovements();
-    fetchActiveMovement();
-  }, []);
-  
-  // Abrir novo moviments
+  // Cria um novo expediente na base de dados
   const handleOpenMovement = async () => {
     try {
       await axios.post(
@@ -60,7 +70,7 @@ function Home() {
     }
   };
 
-  // Fechar moviments
+  // Atualiza o status de um expediente específico a partir do ID
   const handleCloseMovement = async () => {
     try {
 
@@ -77,7 +87,32 @@ function Home() {
       console.error(error);
     }
   };
-  
+
+  // Consulta informações de um movement_id específico a partir do ID para ser utilizado na modal de Sumário 
+  const fetchCloseSummary = async () => {
+
+    try {
+
+      if (!activeMovement?.id) return;
+
+      const response = await axios.get(
+        `http://localhost:5000/movements/${activeMovement.id}/summary`
+      );
+
+      setMovementSummary(response.data);
+
+    } catch (error) {
+      console.error(error);
+    }
+
+  };
+
+
+  // =====================================
+  // Functions para tratar dados das APIs 
+  // =====================================
+
+  // Recebe uma data em formato de string e a converte para um formato amigável: DD/MM/AAAA, HH:MM
   const formatDateTime = (dateString) => {
     if (!dateString) return '-';
 
@@ -92,6 +127,7 @@ function Home() {
     });
   };
 
+  // Calcula quanto tempo passou entre data de início e término, convertendo para um formato amigável: 2h 45min
   const calculateDuration = (start, end) => {
     if (!start || !end) return '-';
 
@@ -112,34 +148,20 @@ function Home() {
     return `${hours}h ${minutes}min`;
   };
 
-  // Carrega sumário do movimento de um ID específico
-  const fetchCloseSummary = async () => {
-    console.log("ACTIVE MOVEMENT:", activeMovement);
 
-    try {
-      const id = activeMovement?.id;
-
-      console.log("MOVEMENT ID:", id);
-
-      if (!id) return;
-
-      const [summaryRes, productsRes, driversRes] = await Promise.all([
-        axios.get(`http://localhost:5000/movements/${id}/summary`),
-        axios.get(`http://localhost:5000/movements/${id}/top-products`),
-        axios.get(`http://localhost:5000/movements/${id}/delivery-drivers`)
-      ]);
-
-      setMovementSummary(summaryRes.data);
-      setTopProducts(productsRes.data);
-      setDeliveryDrivers(driversRes.data);
-
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // ==========================================================================================================================
+  // Executa as seguintes functions assim que o componente é carregado pela 1ª vez, mesmo que não exista interações de clicks 
+  // ==========================================================================================================================
+  useEffect(() => {
+    fetchMovements();
+    fetchActiveMovement();
+  }, []);
 
 
 
+  // ==========================
+  // Renderização do front-end
+  // ==========================
   return (
     <div className="p-10">
 
@@ -154,7 +176,7 @@ function Home() {
         </p>
       </div>
 
-      {/* SEÇÃO DE EXPEDIENTE */}
+      {/* BODY - Detalhes do expediente em andamento */}
       {activeMovement ? (
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 mb-8">
@@ -172,7 +194,7 @@ function Home() {
               </div>
 
               <p className="text-gray-600">
-                Iniciado às {activeMovement.openedAt}
+                Iniciado às {formatDateTime(activeMovement.opened_at)}
               </p>
             </div>
 
@@ -190,7 +212,7 @@ function Home() {
                   transition-colors
                 "
               >
-                Acessar pedidos
+                Ver pedidos
               </button>
 
               <button
@@ -224,7 +246,7 @@ function Home() {
               </div>
 
               <div className="text-2xl font-bold text-gray-800 mt-1">
-                {movementSummary?.total_orders}
+                {activeMovement?.total_orders || 0}
               </div>
             </div>
 
@@ -234,8 +256,8 @@ function Home() {
               </div>
 
               <div className="text-2xl font-bold text-gray-800 mt-1">
-                {movementSummary?.counter_orders}
-                
+                {activeMovement?.counter_orders || 0}
+
               </div>
             </div>
 
@@ -245,7 +267,7 @@ function Home() {
               </div>
 
               <div className="text-2xl font-bold text-gray-800 mt-1">
-                {movementSummary?.pickup_orders}
+                {activeMovement?.pickup_orders || 0}
               </div>
             </div>
 
@@ -255,7 +277,7 @@ function Home() {
               </div>
 
               <div className="text-2xl font-bold text-gray-800 mt-1">
-                {movementSummary?.delivery_orders}
+                {activeMovement?.delivery_orders || 0}
               </div>
             </div>
 
@@ -265,7 +287,7 @@ function Home() {
               </div>
 
               <div className="text-2xl font-bold text-green-600 mt-1">
-                R$ {Number(movementSummary?.revenue).toFixed(2)}
+                R$ {Number(activeMovement?.revenue || 0).toFixed(2)}
               </div>
             </div>
 
@@ -301,7 +323,7 @@ function Home() {
         </div>
       )}
 
-      {/* HISTÓRICO */}
+      {/* BODY - Histórico de expedientes */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
 
         <div className="px-6 py-4 border-b bg-gray-50">
@@ -397,9 +419,17 @@ function Home() {
 
                 </td>
 
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-right flex justify-end gap-3">
 
                   <button
+                    onClick={async () => {
+                      const response = await axios.get(
+                        `http://localhost:5000/movements/${movement.id}/summary`
+                      );
+                      setMovementSummary(response.data);
+                      setSelectedMovement(movement);
+                      setShowCloseModal(true);
+                    }}
                     className="
                       border
                       border-blue-600
@@ -411,7 +441,23 @@ function Home() {
                       transition-colors
                     "
                   >
-                    Visualizar resumo
+                    Ver resumo
+                  </button>
+
+                  <button
+                    onClick={}
+                    className="
+                      border
+                      border-blue-600
+                      text-blue-600
+                      hover:bg-blue-50
+                      px-3
+                      py-1
+                      rounded
+                      transition-colors
+                    "
+                  >
+                    Ver pedidos antigos
                   </button>
 
                 </td>
@@ -425,101 +471,209 @@ function Home() {
 
       </div>
 
-      {/* MODAL FECHAMENTO */}
+      {/* MODAL */}
       {showCloseModal && (
+
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 
-          <div className="bg-white rounded-lg shadow-lg w-[700px] max-w-[95vw]">
+          <div className="
+            bg-white 
+            rounded-lg 
+            shadow-lg 
+            w-[700px] 
+            max-w-[95vw]
+            flex
+            flex-col
+          ">
 
-            <div className="px-6 py-5 border-b bg-gray-50">
-              <h2 className="text-xl font-bold text-gray-800">
-                Resumo do expediente
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+
+              <h2 className="text-xl font-semibold text-gray-800">
+                Visualização de resumo
               </h2>
+
             </div>
 
-            <div className="p-6 space-y-6">
+            {/* BODY */}
+            <div className="w-full px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
 
-              <div>
-                <h3 className="font-semibold mb-2">
-                  Pedidos
+              {/* RESUMO CARDS */}
+              <div className="space-y-4">
+
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                  Visão geral
                 </h3>
 
-                <ul className="text-gray-700 space-y-1">
-                  <li>Total de pedidos: {movementSummary?.total_orders || 0}</li>
-                  <li>Delivery: {movementSummary?.delivery_orders || 0}</li>
-                  <li>Balcão: {movementSummary?.counter_orders || 0}</li>
-                  <li>Retirada: {movementSummary?.pickup_orders || 0}</li>
-                </ul>
+                {/* linha 1 */}
+                <div className="grid grid-cols-2 gap-4">
+                  
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <div className="text-sm text-gray-500">Total de pedidos</div>
+                    <div className="text-2xl font-bold text-gray-800">
+                      {movementSummary?.total_orders || 0}
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <div className="text-sm text-gray-500">Faturamento</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      R$ {Number(movementSummary?.revenue || 0).toFixed(2)}
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* linha 2 (3 colunas) */}
+                <div className="grid grid-cols-3 gap-4 w-full">
+
+                  <div className="border rounded-lg p-4 bg-white">
+                    <div className="text-sm text-gray-500">Balcão</div>
+                    <div className="text-xl font-semibold text-gray-800">
+                      {movementSummary?.counter_orders || 0}
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg p-4 bg-white">
+                    <div className="text-sm text-gray-500">Retirada</div>
+                    <div className="text-xl font-semibold text-gray-800">
+                      {movementSummary?.pickup_orders || 0}
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg p-4 bg-white">
+                    <div className="text-sm text-gray-500">Entrega</div>
+                    <div className="text-xl font-semibold text-gray-800">
+                      {movementSummary?.delivery_orders || 0}
+                    </div>
+                  </div>
+
+                </div>
+
               </div>
 
+              {/* PRODUTOS */}
               <div>
-                <h3 className="font-semibold mb-2">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">
                   Produtos mais vendidos
                 </h3>
 
-                <ul className="text-gray-700 space-y-1">
-                  {topProducts.map((p, i) => (
-                    <li key={i}>
-                      * {p.name} - {p.quantity}
-                    </li>
+                <div className="space-y-2">
+                  {movementSummary?.top_products?.map((p, i) => (
+                    <div
+                      key={i}
+                      className="flex justify-between border rounded px-3 py-2 bg-white"
+                    >
+                      <span className="text-gray-700">
+                        {p.product_name}
+                      </span>
+
+                      <span className="font-semibold text-gray-800">
+                        {p.quantity}x
+                      </span>
+                    </div>
                   ))}
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">
-                  Entregadores
-                </h3>
-
-                <ul className="text-gray-700 space-y-1">
-                  {deliveryDrivers.map((d, i) => (
-                    <li key={i}>
-                      {d.name} - R$ {Number(d.amount).toFixed(2)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">
-                  Faturamento
-                </h3>
-
-                <div className="text-3xl font-bold text-green-600">
-                  R$ {Number(movementSummary?.revenue || 0).toFixed(2)}
                 </div>
               </div>
+              
+              {/* ENTREGADORES */}
+              {movementSummary?.delivery_people?.length > 0 && (
+                <div>
+                  
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                    Entregadores
+                  </h3>
+
+                  <div className="space-y-3">
+
+                    {movementSummary.delivery_people.map((driver, i) => (
+                      
+                      <div
+                        key={i}
+                        className="border rounded-lg p-4 bg-white flex items-center justify-between"
+                      >
+
+                        {/* LADO ESQUERDO */}
+                        <div className="space-y-1">
+
+                          <div className="text-gray-900 font-semibold">
+                            {driver.name}
+                          </div>
+
+                          <div className="text-sm text-gray-500 mt-1">
+                            Comandas: {driver.order_ids?.length > 0
+                              ? driver.order_ids.map(id => `#${id}`).join(', ')
+                              : '-'}
+                          </div>
+
+                        </div>
+
+                        {/* LADO DIREITO */}
+                        <div className="text-right">
+
+                          <div className="text-sm text-gray-500">
+                            Comissão
+                          </div>
+
+                          <div className="text-lg font-bold text-green-600">
+                            R$ {Number(driver.payment || 0).toFixed(2)}
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                </div>
+              )}
 
             </div>
 
-            <div className="p-4 border-t flex justify-end gap-4">
+            
 
+            {/* Botões */}
+            <div className="p-4 px-6 border-t flex justify-end gap-4">
+
+              {/* Sempre existe botão Fechar */}
               <button
                 onClick={() => setShowCloseModal(false)}
                 className="
-                  px-5
+                  w-32
+                  px-8
                   py-2
-                  border
                   rounded
-                  hover:bg-gray-50
+                  border
+                  border-purple-600
+                  text-purple-600
+                  bg-white
+                  hover:bg-purple-50
+                  transition-colors
                 "
               >
-                Cancelar
+                Fechar
               </button>
 
-              <button
-                onClick={handleCloseMovement}
-                className="
-                  px-5
-                  py-2
-                  bg-red-600
-                  hover:bg-red-700
-                  text-white
-                  rounded
-                "
-              >
-                Confirmar fechamento
-              </button>
+              {/* Só aparece se estiver OPEN */}
+              {selectedMovement?.status === 'OPEN' && (
+                <button
+                  onClick={handleCloseMovement}
+                  className="
+                    w-32
+                    px-4
+                    py-2
+                    rounded
+                    text-white
+                    transition-colors
+                    bg-red-600 
+                    hover:bg-red-700
+                  "
+                >
+                  Encerrar
+                </button>
+              )}
 
             </div>
 

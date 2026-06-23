@@ -1,3 +1,7 @@
+// =========================
+// PÁGINA DE PRODUTOS
+// =========================
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
