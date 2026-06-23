@@ -2,6 +2,74 @@
 
 from . import db
 from datetime import datetime, timedelta
+
+class Movement(db.Model):
+    __tablename__ = 'movements'
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    opened_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+    closed_at = db.Column(
+        db.DateTime
+    )
+
+    total_orders = db.Column(
+        db.Integer,
+        default=0
+    )
+
+    total_counter_orders = db.Column(
+        db.Integer,
+        default=0
+    )
+
+    total_pickup_orders = db.Column(
+        db.Integer,
+        default=0
+    )
+
+    total_delivery_orders = db.Column(
+        db.Integer,
+        default=0
+    )
+
+    revenue = db.Column(
+        db.Numeric(10, 2),
+        default=0
+    )
+
+    status = db.Column(
+        db.String(20),
+        nullable=False,
+        default='OPEN'
+    )
+    
+    orders = db.relationship(
+        'Order',
+        backref='movement',
+        lazy=True
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "opened_at": self.opened_at.isoformat() if self.opened_at else None,
+            "closed_at": self.closed_at.isoformat() if self.closed_at else None,
+            "total_orders": self.total_orders,
+            "total_counter_orders": self.total_counter_orders,
+            "total_pickup_orders": self.total_pickup_orders,
+            "total_delivery_orders": self.total_delivery_orders,
+            "revenue": float(self.revenue),
+            "status": self.status
+        }
  
 class Client(db.Model):
     __tablename__ = 'clients'
@@ -101,6 +169,12 @@ class Order(db.Model):
         db.Integer,
         db.ForeignKey('clients.id'),
         nullable=True
+    )
+    
+    movement_id = db.Column(
+        db.Integer,
+        db.ForeignKey('movements.id'),
+        nullable=False
     )
     
     client = db.relationship(

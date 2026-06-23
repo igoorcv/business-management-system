@@ -1,8 +1,10 @@
 # Criação de rotas
 
 from flask import Blueprint, jsonify, request
+from datetime import datetime
+from sqlalchemy import func
 
-from .models import Product, Order, Client, OrderItem
+from .models import Product, Order, Client, OrderItem, Movement
 from . import db
 
 routes = Blueprint('routes', __name__)
@@ -89,14 +91,25 @@ def update_product(id):
 @routes.route('/orders', methods=['GET'])
 def get_orders():
 
-    orders = Order.query.all()
+    movement_id = request.args.get('movement_id')
 
-    output = []
+    query = Order.query
 
-    for order in orders:
-        output.append(order.to_dict())
+    if movement_id:
+        query = query.filter_by(movement_id=movement_id)
+    else:
+        # 🔥 REGRA IMPORTANTE: nunca listar pedidos sem movimento ativo
+        active_movement = Movement.query.filter_by(status='OPEN').first()
 
-    return jsonify(output)
+        if not active_movement:
+            return jsonify([])
+
+        query = query.filter_by(movement_id=active_movement.id)
+
+
+    orders = query.all()
+
+    return jsonify([o.to_dict() for o in orders])
 
 # Cria método GET Order
 @routes.route('/orders/<int:id>', methods=['GET'])
@@ -116,7 +129,12 @@ def get_order(id):
 def create_order():
     data = request.json
     
-    print(data)
+    active_movement = Movement.query.filter_by(status='OPEN').first()
+
+    if not active_movement:
+        return jsonify({
+            "error": "Nenhum movimento aberto"
+        }), 400
     
     new_order = Order(
         client_id=data['client_id'],
@@ -129,7 +147,9 @@ def create_order():
         delivery_fee=data.get('delivery_fee', 0),
         
         total=0,
-        status=data['status']
+        status=data['status'],
+        
+        movement_id=active_movement.id
     )
 
     db.session.add(new_order)
@@ -437,3 +457,174 @@ def assign_delivery_person(order_id):
     return jsonify({
         "message": "Entrega liberada"
     }) 
+    
+
+# Abrir novo moviments
+@routes.route('/movements/open', methods=['POST'])
+def open_movement():
+
+    opened_movement = Movement.query.filter_by(
+        status='OPEN'
+    ).first()
+
+    if opened_movement:
+        return jsonify({
+            "error": "Já existe um expediente aberto"
+        }), 400
+
+    movement = Movement(
+        opened_at=datetime.now(),
+        status='OPEN'
+    )
+
+    db.session.add(movement)
+    db.session.commit()
+
+    return jsonify(
+        movement.to_dict()
+    ), 201
+
+# Buscar moviments abertos
+@routes.route('/movements/active', methods=['GET'])
+def get_active_movement():
+
+    movement = Movement.query.filter_by(
+        status='OPEN'
+    ).first()
+
+    if not movement:
+        return jsonify(None)
+
+    return jsonify(
+        movement.to_dict()
+    )
+
+# Listar histórico
+@routes.route('/movements', methods=['GET'])
+def get_movements():
+
+    movements = (
+        Movement.query
+        .order_by(Movement.opened_at.desc())
+        .all()
+    )
+
+    return jsonify([
+        m.to_dict()
+        for m in movements
+    ])
+
+# Fechar moviments
+@routes.route('/movements/<int:id>/close', methods=['POST'])
+def close_movement(id):
+
+    movement = Movement.query.get_or_404(id)
+
+    if movement.status == 'CLOSED':
+        return jsonify({
+            "error": "Expediente já encerrado"
+        }), 400
+    
+    orders = Order.query.filter_by(movement_id=id).all()
+    
+    movement.total_orders = len(orders)
+    
+    movement.total_counter_orders = len([
+        o for o in orders if o.order_type == 'counter'
+    ])
+
+    movement.total_pickup_orders = len([
+        o for o in orders if o.order_type == 'pickup'
+    ])
+
+    movement.total_delivery_orders = len([
+        o for o in orders if o.order_type == 'delivery'
+    ])
+
+    movement.revenue = sum(o.total or 0 for o in orders)
+
+    movement.closed_at = datetime.now()
+
+    movement.status = 'CLOSED'
+
+    db.session.commit()
+
+    return jsonify(
+        movement.to_dict()
+    )
+
+# Summary do moviment para dados para um id específico
+@routes.route('/movements/<int:id>/summary', methods=['GET'])
+def get_movement_summary(id):
+
+    movement = Movement.query.get_or_404(id)
+
+    orders = Order.query.filter_by(movement_id=id).all()
+
+    total_orders = len(orders)
+
+    delivery_orders = len([o for o in orders if o.order_type == 'entrega'])
+    pickup_orders = len([o for o in orders if o.order_type == 'retirada'])
+    counter_orders = len([o for o in orders if o.order_type == 'balcao'])
+
+    revenue = sum(o.total or 0 for o in orders)
+
+    return jsonify({
+        "total_orders": total_orders,
+        "delivery_orders": delivery_orders,
+        "pickup_orders": pickup_orders,
+        "counter_orders": counter_orders,
+        "revenue": revenue
+    })
+
+# Top products this night
+@routes.route('/movements/<int:id>/top-products', methods=['GET'])
+def get_top_products(id):
+
+    results = (
+        db.session.query(
+            Product.name,
+            func.sum(OrderItem.quantity).label('total')
+        )
+        .join(OrderItem, OrderItem.product_id == Product.id)
+        .join(Order, Order.id == OrderItem.order_id)
+        .filter(Order.movement_id == id)
+        .group_by(Product.name)
+        .order_by(func.sum(OrderItem.quantity).desc())
+        .limit(5)
+        .all()
+    )
+
+    return jsonify([
+        {
+            "name": name,
+            "quantity": total
+        }
+        for name, total in results
+    ])
+
+# Valor a ser pago para entregadores
+@routes.route('/movements/<int:id>/delivery-drivers', methods=['GET'])
+def get_delivery_drivers(id):
+
+    results = (
+        db.session.query(
+            Order.delivery_person,
+            func.sum(Order.total).label('amount')
+        )
+        .filter(
+            Order.movement_id == id,
+            Order.delivery_person.isnot(None)
+        )
+        .group_by(Order.delivery_person)
+        .all()
+    )
+
+    return jsonify([
+        {
+            "name": name,
+            "amount": float(amount or 0)
+        }
+        for name, amount in results
+    ])
+    

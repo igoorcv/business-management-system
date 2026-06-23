@@ -8,7 +8,7 @@ import {
 import Products from './pages/Products';
 import Clients from './pages/Clients';
 import Orders from './pages/Orders';
-import OrderDetails from "./pages/OrderDetails";
+import Home from "./pages/Home";
 
 function App() {
 
@@ -18,6 +18,10 @@ function App() {
 
       <div className="p-4 bg-gray-100 flex gap-4">
 
+        <Link to="/home">
+          Home
+        </Link>
+        
         <Link to="/orders">
           Pedidos
         </Link>
@@ -34,6 +38,11 @@ function App() {
 
       <Routes>
 
+        <Route 
+          path="/home"
+          element={<Home />} 
+        />
+
         <Route
           path="/products"
           element={<Products />}
@@ -42,11 +51,6 @@ function App() {
         <Route
           path="/orders"
           element={<Orders />}
-        />
-
-        <Route 
-          path="/orders/:id"
-          element={<OrderDetails />} 
         />
 
         <Route 
