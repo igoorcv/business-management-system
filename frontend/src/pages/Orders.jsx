@@ -55,6 +55,22 @@ function Orders() {
 
     const isReadOnly = viewMode;
 
+    const [showDeliveryModal, setShowDeliveryModal] =
+        useState(false);
+
+    const [selectedOrder, setSelectedOrder] =
+        useState(null);
+
+    const [selectedDeliveryPerson, setSelectedDeliveryPerson] =
+        useState('');
+    
+    const deliveryPeople = [
+        '11980802020 - Madruga',
+        '11980802020 - Lucas',
+        '11980802020 - Robson',
+        '11980802020 - Pedro'
+    ];
+
     // Busca produtos
     const fetchProducts = async () => {
 
@@ -748,6 +764,56 @@ function Orders() {
 
     };
 
+    // Abre modal de entregador
+    const openDeliveryModal = (order) => {
+
+        setSelectedOrder(order);
+
+        setSelectedDeliveryPerson(
+            order.delivery_person || ''
+        );
+
+        setShowDeliveryModal(true);
+
+    };
+
+    // Função de liberação de entrega
+    const releaseDelivery = async () => {
+
+        try {
+
+            await axios.put(
+
+                `http://localhost:5000/orders/${selectedOrder.id}/delivery`,
+
+                {
+                    delivery_person:
+                        selectedDeliveryPerson
+                }
+
+            );
+
+            fetchOrders();
+
+            setShowDeliveryModal(false);
+
+            setSelectedOrder(null);
+
+            setSelectedDeliveryPerson('');
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+        }
+
+    };
+
+    // Valida se foi selecionado o motoboy na modal
+    const isDeliveryValid =
+        selectedDeliveryPerson.trim() !== '';
 
     // FRONT-END
     return (
@@ -1063,6 +1129,19 @@ function Orders() {
                                                                             🍕 {order.items?.length || 0} {order.items?.length === 1 ? "item" : "itens"}
                                                                         </div>
 
+                                                                        {
+                                                                            order.delivery_person && (
+
+                                                                                <div className="
+                                                                                    text-base 
+                                                                                    text-gray-500
+                                                                                ">
+                                                                                    🛵 {order.delivery_person}
+                                                                                </div>
+
+                                                                            )
+                                                                        }
+
                                                                     </div>
 
                                                                     {/* Coluna direita */}
@@ -1158,13 +1237,8 @@ function Orders() {
                                                                                 order.order_type === 'entrega' &&  (
 
                                                                                     <button
-                                                                                        onClick={(e) => {
-
-                                                                                            e.stopPropagation();
-
-                                                                                            // TODO:
-                                                                                            // abrir modal de entregadores
-
+                                                                                        onClick={() => {
+                                                                                            openDeliveryModal(order)
                                                                                         }}
                                                                                         className="
                                                                                             flex-1
@@ -1282,7 +1356,7 @@ function Orders() {
 
             </DragDropContext>
 
-            {/* MODAL */}
+            {/* MODAL PRINCIPAL */}
             {
                 showModal && (
 
@@ -2169,7 +2243,10 @@ function Orders() {
                                             createOrder();
                                         }
 
+                                        resetForm();
+                                        setViewMode(false);
                                         setShowModal(false);
+                                        setEditingId(null); 
 
                                     }}
                                     hidden={viewMode}
@@ -2193,6 +2270,189 @@ function Orders() {
                                             ? 'Atualizar'
                                             : 'Criar'
                                     }
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )
+            }
+
+            {/* MODAL ENTREGADOR */}
+            {
+                showDeliveryModal && (
+
+                    <div className="
+                        fixed
+                        inset-0
+                        bg-black/50
+                        flex
+                        items-center
+                        justify-center
+                        z-50
+                    ">
+
+                        <div className="
+                            bg-white
+                            rounded-lg
+                            shadow-lg
+                            w-[500px]
+                            max-w-[95vw]
+                            flex
+                            flex-col
+                        ">
+
+                            {/* Header */}
+                            <div className="
+                                px-6
+                                py-5
+                                border-b
+                                border-gray-200
+                                bg-gray-50
+                                rounded-t-lg
+                            ">
+
+                                <h2 className="
+                                    text-xl 
+                                    font-semibold 
+                                    text-gray-800
+                                    "
+                                >
+                                    Liberação de entrega
+                                </h2>
+
+                            </div>
+
+                            {/* Body */}
+                            <div className="p-6">
+
+                                <label
+                                    className="
+                                        block
+                                        text-sm
+                                        text-gray-600
+                                        mb-3
+                                    "
+                                >
+                                    Qual entregador realizará essa entrega?
+                                </label>
+
+                                <Select
+                                    options={
+                                        deliveryPeople.map(
+                                            person => ({
+                                                value: person,
+                                                label: person
+                                            })
+                                        )
+                                    }
+                                    value={
+                                        deliveryPeople
+                                            .map(person => ({
+                                                value: person,
+                                                label: person
+                                            }))
+                                            .find(
+                                                option =>
+                                                    option.value ===
+                                                    selectedDeliveryPerson
+                                            )
+                                    }
+                                    onChange={(selected) =>
+                                        setSelectedDeliveryPerson(
+                                            selected?.value || ''
+                                        )
+                                    }
+                                    styles={{
+                                        control: (provided) => ({
+                                            ...provided,
+                                            minHeight: '42px',
+                                            height: '42px',
+                                            borderColor: '#E9D5FF',
+                                            borderRadius: '0.375rem',
+                                            boxShadow: 'none',
+                                        }),
+
+                                        valueContainer: (provided) => ({
+                                            ...provided,
+                                            height: '42px',
+                                            padding: '0 12px',
+                                        }),
+
+                                        input: (provided) => ({
+                                            ...provided,
+                                            margin: '0px',
+                                            padding: '0px',
+                                        }),
+
+                                        indicatorsContainer: (provided) => ({
+                                            ...provided,
+                                            height: '42px',
+                                        }),
+
+                                        option: (provided, state) => ({
+                                            ...provided,
+                                            backgroundColor: state.isFocused
+                                                ? '#E9D5FF' // bg-purple-200
+                                                : 'white',
+                                            //color: 'black'
+                                            color: state.isSelected
+                                                    ? 'black'
+                                                    : '#6B21A8', // bg-purple-800
+                                        }),
+                                    }}
+                                />
+
+                            </div>
+
+                            {/* Footer */}
+                            <div className="
+                                p-4
+                                px-6
+                                border-t
+                                flex
+                                justify-end
+                                gap-4
+                            ">
+
+                                <button
+                                    onClick={() =>
+                                        setShowDeliveryModal(false)
+                                    }
+                                    className="
+                                        w-32
+                                        px-6
+                                        py-2
+                                        border
+                                        border-purple-600
+                                        hover:bg-purple-50
+                                        text-purple-600
+                                        rounded
+                                    "
+                                >
+                                    Fechar
+                                </button>
+
+                                <button
+                                    onClick={releaseDelivery}
+                                    className={`
+                                    w-34
+                                    px-4
+                                    py-2
+                                    rounded
+                                    text-white
+                                    transition-colors
+                                    ${
+                                        isDeliveryValid
+                                            ? 'bg-purple-600 hover:bg-purple-800'
+                                            : 'bg-gray-400 cursor-not-allowed'
+                                    }
+                                `}
+                                >
+                                    Liberar entrega
                                 </button>
 
                             </div>

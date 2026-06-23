@@ -378,3 +378,26 @@ def update_order_status(id):
     return jsonify({
         'message': 'Status atualizado'
     })
+    
+# Atualiza delivery_person no Order
+@routes.route(
+    '/orders/<int:order_id>/delivery',
+    methods=['PUT']
+)
+def assign_delivery_person(order_id):
+
+    data = request.json
+
+    order = Order.query.get_or_404(order_id)
+
+    order.delivery_person = data.get(
+        'delivery_person'
+    )
+
+    order.status = 'Saiu para entrega'
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Entrega liberada"
+    }) 

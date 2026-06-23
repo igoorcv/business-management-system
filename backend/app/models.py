@@ -127,6 +127,11 @@ class Order(db.Model):
         default=0
     )
     
+    delivery_person = db.Column(
+        db.String(100),
+        nullable=True
+    )
+    
     created_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -183,6 +188,7 @@ class Order(db.Model):
                 item.to_dict()
                 for item in self.items
             ],
+            "delivery_person": self.delivery_person,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'finalized_at': (
                 self.finalized_at.isoformat()
