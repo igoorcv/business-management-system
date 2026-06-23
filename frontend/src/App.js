@@ -6,6 +6,7 @@ import {
 } from 'react-router-dom';
 
 import Products from './pages/Products';
+import Clients from './pages/Clients';
 import Orders from './pages/Orders';
 import OrderDetails from "./pages/OrderDetails";
 
@@ -17,12 +18,16 @@ function App() {
 
       <div className="p-4 bg-gray-100 flex gap-4">
 
+        <Link to="/orders">
+          Pedidos
+        </Link>
+
         <Link to="/products">
           Produtos
         </Link>
 
-        <Link to="/orders">
-          Pedidos
+        <Link to="/clients">
+          Clientes
         </Link>
 
       </div>
@@ -42,6 +47,11 @@ function App() {
         <Route 
           path="/orders/:id"
           element={<OrderDetails />} 
+        />
+
+        <Route 
+          path="/clients"
+          element={<Clients />} 
         />
 
       </Routes>

@@ -216,11 +216,12 @@ function Orders() {
                 const response = await axios.post(
                     'http://localhost:5000/clients',
                     {
-                        nome: customerName,
-                        telefone: phone,
-                        endereco: address,
-                        complemento: complement,
-                        bairro: district
+                        name: customerName,
+                        phone: phone,
+                        address: address,
+                        complement: complement,
+                        neighborhood: district,
+                        is_active: true
                     }
                 );
 
@@ -1080,6 +1081,11 @@ function Orders() {
                                                                 order.created_at,
                                                                 order.finalized_at
                                                             );
+                                                        
+                                                        const totalItems = order.items?.reduce(
+                                                            (total, item) => total + item.quantity,
+                                                            0
+                                                        ) || 0;
 
                                                         return (
 
@@ -1126,7 +1132,7 @@ function Orders() {
                                                                         </div>
 
                                                                         <div className="text-base text-gray-500">
-                                                                            🍕 {order.items?.length || 0} {order.items?.length === 1 ? "item" : "itens"}
+                                                                            🍕 {totalItems} {totalItems === 1 ? "item" : "itens"}
                                                                         </div>
 
                                                                         {

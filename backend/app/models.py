@@ -30,6 +30,22 @@ class Client(db.Model):
     bairro = db.Column(
         db.String(100)
     )
+    
+    is_active = db.Column(
+        db.Boolean, 
+        default=True
+    )
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.nome,
+            "phone": self.telefone,
+            "address": self.endereco,
+            "complement": self.complemento,
+            "neighborhood": self.bairro,
+            "is_active": self.is_active
+        }    
 
 class Product(db.Model):
     __tablename__ = 'products'

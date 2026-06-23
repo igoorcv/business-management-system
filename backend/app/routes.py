@@ -295,11 +295,12 @@ def create_client():
     data = request.get_json()
 
     client = Client(
-        nome=data['nome'],
-        telefone=data['telefone'],
-        endereco=data.get('endereco'),
-        complemento=data.get('complemento'),
-        bairro=data.get('bairro')
+        nome=data['name'],
+        telefone=data['phone'],
+        endereco=data.get('address'),
+        complemento=data.get('complement'),
+        bairro=data.get('neighborhood'),
+        is_active=data.get('is_active', True)
     )
 
     db.session.add(client)
@@ -308,6 +309,12 @@ def create_client():
     return jsonify({
         'id': client.id
     }), 201
+
+# Cria método GET Clients
+@routes.route('/clients', methods=['GET'])
+def get_clients():
+    clients = Client.query.all()
+    return jsonify([c.to_dict() for c in clients])
 
 # Cria método GET Client by Phone
 @routes.route('/clients/search')
@@ -332,10 +339,39 @@ def search_client():
     })
 
 # Cria método UPDATE Client
+@routes.route('/clients/<int:id>', methods=['PUT'])
+def update_client(id):
+    client = Client.query.get_or_404(id)
 
+    data = request.get_json()
+
+    client.nome = data.get('name', client.nome)
+    client.telefone = data.get('phone', client.telefone)
+    client.endereco = data.get('address', client.endereco)
+    client.complemento = data.get('complement', client.complemento)
+    client.bairro = data.get('neighborhood', client.bairro)
+    client.is_active = data.get('is_active', client.is_active)
+
+    try:
+        db.session.commit()
+        return jsonify(client.to_dict()), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
 
 # Cria método DELETE Client
+@routes.route('/clients/<int:id>', methods=['DELETE'])
+def delete_client(id):
+    client = Client.query.get_or_404(id)
 
+    try:
+        db.session.delete(client)
+        db.session.commit()
+        return jsonify({"message": "Client deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
 
 # Cria método UPDATE Status Order
 @routes.route('/orders/<int:id>/status', methods=['PUT'])
