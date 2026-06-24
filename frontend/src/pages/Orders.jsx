@@ -1548,6 +1548,7 @@ function Orders() {
 
                                             <div className="col-span-6">
                                                 <input
+                                                    type="number"
                                                     className={inputClass}
                                                     placeholder="Telefone"
                                                     value={phone}
@@ -1563,6 +1564,7 @@ function Orders() {
                                         <div className="grid grid-cols-12 gap-4">
                                             <div className="col-span-2">
                                                 <input
+                                                    type="number"
                                                     className={inputClass}
                                                     placeholder="Telefone"
                                                     value={phone}
@@ -2020,12 +2022,12 @@ function Orders() {
                                     </h3>
 
                                     {/* Campos */}
-                                    <div className="grid grid-cols-12 gap-4">
+                                    <div className="flex gap-4 flex-nowrap items-end">
 
                                         {/* Forma de pagamento */}
                                         <div
                                             ref={paymentDropdownRef}
-                                            className="col-span-4"
+                                            className="w-80 col-span-4"
                                         >
 
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -2117,7 +2119,7 @@ function Orders() {
                                         </div>
 
                                         {/* Desconto */}
-                                        <div className="col-span-2">
+                                        <div className=" w-32 col-span-2">
 
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                                 Desconto
@@ -2168,10 +2170,63 @@ function Orders() {
                                         {/* Taxa entrega */}
                                         {orderType === 'entrega' && (
 
-                                            <div className="col-span-2">
+                                            <div className="w-32  col-span-2">
 
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                                     Taxa de entrega
+                                                </label>
+
+                                                <div className="relative">
+
+                                                    <span
+                                                        className="
+                                                            absolute
+                                                            left-3
+                                                            top-1/2
+                                                            -translate-y-1/2
+                                                            text-gray-500
+                                                        "
+                                                    >
+                                                        R$
+                                                    </span>
+
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        value={deliveryFee}
+                                                        onChange={(e) =>
+                                                            setDeliveryFee(e.target.value)
+                                                        }
+                                                        placeholder="0,00"
+                                                        className="
+                                                            border
+                                                            border-gray-300
+                                                            rounded-md
+                                                            pl-10
+                                                            pr-3
+                                                            py-2
+                                                            w-full
+                                                            focus:outline-none
+                                                            focus:ring-2
+                                                            focus:ring-purple-500
+                                                        "
+                                                        disabled={isReadOnly}
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+                                        )}
+
+                                        {/* Troco */}
+                                        {orderType === 'entrega' && (
+
+                                            <div className="w-32 col-span-2">
+
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Troco
                                                 </label>
 
                                                 <div className="relative">
@@ -2225,9 +2280,11 @@ function Orders() {
                                                     ? 'col-span-4'
                                                     : 'col-span-6'
                                                 }
+                                                ml-auto
                                                 flex
                                                 items-center
                                                 justify-end
+                                                self-start mt-2
                                             `}
                                         >
 
