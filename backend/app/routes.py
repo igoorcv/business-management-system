@@ -29,11 +29,11 @@ def create_client():
     data = request.get_json()
 
     client = Client(
-        nome=data['name'],
-        telefone=data['phone'],
-        endereco=data.get('address'),
-        complemento=data.get('complement'),
-        bairro=data.get('neighborhood'),
+        name=data['name'],
+        phone=data['phone'],
+        address=data.get('address'),
+        complement=data.get('complement'),
+        neighborhood=data.get('neighborhood'),
         is_active=data.get('is_active', True)
     )
 
@@ -51,7 +51,7 @@ def search_client():
     phone = request.args.get('phone')
 
     client = Client.query.filter_by(
-        telefone=phone
+        phone=phone
     ).first()
 
     if not client:
@@ -59,11 +59,11 @@ def search_client():
 
     return jsonify({
         'id': client.id,
-        'nome': client.nome,
-        'telefone': client.telefone,
-        'endereco': client.endereco,
-        'complemento': client.complemento,
-        'bairro': client.bairro
+        'name': client.name,
+        'phone': client.phone,
+        'address': client.address,
+        'complement': client.complement,
+        'neighborhood': client.neighborhood
     })
 
 # Atualiza um cliente específico a partir do ID
@@ -73,11 +73,11 @@ def update_client(id):
 
     data = request.get_json()
 
-    client.nome = data.get('name', client.nome)
-    client.telefone = data.get('phone', client.telefone)
-    client.endereco = data.get('address', client.endereco)
-    client.complemento = data.get('complement', client.complemento)
-    client.bairro = data.get('neighborhood', client.bairro)
+    client.name = data.get('name', client.name)
+    client.phone = data.get('phone', client.phone)
+    client.address = data.get('address', client.address)
+    client.complement = data.get('complement', client.complement)
+    client.neighborhood = data.get('neighborhood', client.neighborhood)
     client.is_active = data.get('is_active', client.is_active)
 
     try:
@@ -460,8 +460,8 @@ def get_movement_summary(movement_id):
         delivery_people.append({
             "name": delivery_person,
 
-            "order_ids": [
-                order.id
+            "order_slip_ids": [
+                order.order_slip_id
                 for order in orders
             ],
 
@@ -568,11 +568,20 @@ def create_order():
             "error": "Nenhum movimento aberto"
         }), 400
     
+    max_slip = db.session.query(
+        func.max(Order.order_slip_id)
+    ).filter(
+        Order.movement_id == active_movement.id
+    ).scalar()
+
+    next_slip = (max_slip or 0) + 1
+    
     new_order = Order(
         client_id=data['client_id'],
         order_type=data['order_type'],
         customer_name=data['customer_name'],
         phone=data.get('phone'),
+        order_slip_id=next_slip,
         
         payment_method=data.get('payment_method'),
         discount=data.get('discount', 0),

@@ -51,26 +51,26 @@ class Client(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    nome = db.Column(
+    name = db.Column(
         db.String(100),
         nullable=False
     )
 
-    telefone = db.Column(
+    phone = db.Column(
         db.String(20),
         unique=True,
         nullable=False
     )
 
-    endereco = db.Column(
+    address = db.Column(
         db.String(200)
     )
 
-    complemento = db.Column(
+    complement = db.Column(
         db.String(100)
     )
 
-    bairro = db.Column(
+    neighborhood = db.Column(
         db.String(100)
     )
     
@@ -82,11 +82,11 @@ class Client(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "name": self.nome,
-            "phone": self.telefone,
-            "address": self.endereco,
-            "complement": self.complemento,
-            "neighborhood": self.bairro,
+            "name": self.name,
+            "phone": self.phone,
+            "address": self.address,
+            "complement": self.complement,
+            "neighborhood": self.neighborhood,
             "is_active": self.is_active
         }    
 
@@ -140,6 +140,12 @@ class Order(db.Model):
     order_type = db.Column(
         db.String(20),
         default='balcao'
+    )
+    
+    order_slip_id = db.Column(
+        db.Integer,
+        #default=0,
+        nullable=False
     )
     
     client_id = db.Column(
@@ -235,16 +241,17 @@ class Order(db.Model):
         return {
             'id': self.id,
             'customer_name': (
-                self.client.nome
+                self.client.name
                 if self.client
                 else self.customer_name
             ),
             'phone': (
-                self.client.telefone
+                self.client.phone
                 if self.client
                 else self.phone
             ),
             'client_id': self.client_id,
+            'order_slip_id': self.order_slip_id,
             'order_type': self.order_type,
             'payment_method': self.payment_method,
             'discount': self.discount,

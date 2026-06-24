@@ -603,8 +603,8 @@ function Home() {
                           </div>
 
                           <div className="text-sm text-gray-500 mt-1">
-                            Comandas: {driver.order_ids?.length > 0
-                              ? driver.order_ids.map(id => `#${id}`).join(', ')
+                            Comandas: {driver.order_slip_ids?.length > 0
+                              ? driver.order_slip_ids.map(order_slip_id => `#${order_slip_id}`).join(', ')
                               : '-'}
                           </div>
 

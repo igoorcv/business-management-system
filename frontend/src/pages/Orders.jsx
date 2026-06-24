@@ -510,13 +510,13 @@ function Orders() {
 
                 setClientId(client.id);
 
-                setCustomerName(client.nome);
+                setCustomerName(client.name);
 
-                setAddress(client.endereco || '');
+                setAddress(client.address || '');
 
-                setComplement(client.complemento || '');
+                setComplement(client.complement || '');
 
-                setDistrict(client.bairro || '');
+                setDistrict(client.neighborhood || '');
 
             } else {
 
@@ -598,7 +598,7 @@ function Orders() {
         if (!search) return true;
 
         return (
-            String(order.id).includes(search) ||
+            String(order.order_slip_id).includes(search) ||
             (order.customer_name || '')
                 .toLowerCase()
                 .includes(search) ||
@@ -1116,7 +1116,7 @@ function Orders() {
                                                                         <div className="flex flex-col gap-2">
 
                                                                             <span className="font-semibold text-sm text-gray-700">
-                                                                                Comanda #{order.id}
+                                                                                Comanda #{order.order_slip_id}
                                                                             </span>
 
                                                                             <div
