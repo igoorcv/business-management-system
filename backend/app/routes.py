@@ -408,7 +408,7 @@ def get_movement_summary(movement_id):
                 OrderItem.quantity
             ).desc()
         )
-        .limit(5)
+        .limit(3)
         .all()
     )
 
@@ -589,6 +589,7 @@ def create_order():
         payment_method=data.get('payment_method'),
         discount=data.get('discount', 0),
         delivery_fee=data.get('delivery_fee', 0),
+        change=data.get('change', 0),
         
         total=0,
         status=data['status'],
@@ -649,6 +650,7 @@ def update_order(id):
     order.payment_method = data.get('payment_method')
     order.discount = data.get('discount', 0)
     order.delivery_fee = data.get('delivery_fee', 0)
+    order.change = data.get('change', 0)
     
     items = data.get('items', [])
     

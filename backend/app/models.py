@@ -205,6 +205,11 @@ class Order(db.Model):
         default=0
     )
     
+    change = db.Column(
+        db.Float,
+        default=0
+    )
+    
     delivery_person = db.Column(
         db.String(100),
         nullable=True
@@ -261,6 +266,7 @@ class Order(db.Model):
             'payment_method': self.payment_method,
             'discount': self.discount,
             'delivery_fee': self.delivery_fee,
+            'change': self.change,
             'total_price': self.total,
             'status': self.status,
             'items': [

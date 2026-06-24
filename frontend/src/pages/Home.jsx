@@ -195,7 +195,7 @@ function Home() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex justify-between gap-3">
 
               <button
                 onClick={() => navigate('/orders')}
@@ -221,9 +221,10 @@ function Home() {
                 }}
                 className="
                   w-48
-                  bg-red-600
-                  hover:bg-red-700
-                  text-white
+                  border
+                  border-red-600
+                  hover:bg-red-50
+                  text-red-600
                   px-5
                   py-2
                   rounded

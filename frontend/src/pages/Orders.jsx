@@ -5,6 +5,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import {
     DragDropContext,
@@ -14,6 +15,7 @@ import {
 
 function Orders() {
 
+    const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [customerName, setCustomerName] = useState('');
     const [status, setStatus] = useState('Em preparo');
@@ -40,6 +42,7 @@ function Orders() {
     const [paymentMethod, setPaymentMethod] = useState('');
     const [discount, setDiscount] = useState('');
     const [deliveryFee, setDeliveryFee] = useState('');
+    const [change, setChange] = useState('');
 
     const [paymentSearch, setPaymentSearch] = useState('');
     const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
@@ -239,7 +242,8 @@ function Orders() {
                     status: status,
                     payment_method: paymentMethod,
                     discount: Number(discount || 0),
-                    delivery_fee: Number(deliveryFee || 0)
+                    delivery_fee: Number(deliveryFee || 0),
+                    change: Number(change || 0)
                 }
             );
 
@@ -278,6 +282,7 @@ function Orders() {
 
             setDiscount(0);
             setDeliveryFee(0);
+            setChange(0);
 
             setShowModal(false);
 
@@ -379,6 +384,7 @@ function Orders() {
 
         setDiscount(order.discount || 0);
         setDeliveryFee(order.delivery_fee || 0);
+        setChange(order.change || 0);
 
         setSelectedProducts(
             order.items.map(item => ({
@@ -415,6 +421,7 @@ function Orders() {
                     payment_method: paymentMethod,
                     discount: Number(discount || 0),
                     delivery_fee: Number(deliveryFee || 0),
+                    change: Number(change || 0),
                     items: selectedProducts
                 }
             );
@@ -470,6 +477,7 @@ function Orders() {
 
         setDiscount('');
         setDeliveryFee('');
+        setChange('');
 
         setQuantity(1);
 
@@ -495,7 +503,7 @@ function Orders() {
         paymentMethod.trim() !== '';
 
     //Visualizar pedido sem edição
-    const viewOrder = (order) => {
+    const viewOrder = async (order) => {
 
         setViewMode(true);
 
@@ -509,10 +517,50 @@ function Orders() {
 
         setDiscount(order.discount || 0);
         setDeliveryFee(order.delivery_fee || 0);
+        setChange(order.change || 0);
 
         setOrderType(order.order_type || 'balcao');
 
         setPhone(order.phone || '');
+
+        const phoneValue = order.phone || '';
+
+        if (phoneValue.length >= 8) {
+
+            try {
+
+                const response = await axios.get(
+                    `http://localhost:5000/clients/search?phone=${phoneValue}`
+                );
+
+                const client = response.data;
+
+                if (client) {
+
+                    setClientFound(true);
+
+                    setClientId(client.id);
+
+                    setAddress(client.address || '');
+
+                    setComplement(client.complement || '');
+
+                    setDistrict(client.neighborhood || '');
+
+                } else {
+
+                    setClientFound(false);
+
+                    setClientId(null);
+
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+            }
+        }
 
         setSelectedProducts(
             order.items.map(item => ({
@@ -866,15 +914,34 @@ function Orders() {
 
         <div className="p-10">
 
-            <div className="mb-8">
+            <div className="mb-8 flex items-start justify-between">
+
+            <div>
                 <h1 className="text-3xl font-semibold text-gray-800">
-                Pedidos
+                    Pedidos
                 </h1>
 
                 <p className="text-gray-500 mt-2">
-                Registre seus pedidos e acompanhe suas entregas.
+                    Registre seus pedidos e acompanhe suas entregas.
                 </p>
             </div>
+
+            <button
+                onClick={() => navigate('/home')}
+                className="
+                    px-4
+                    py-2
+                    rounded
+                    text-purple-600
+                    hover:bg-purple-50
+                    transition-colors
+                    font-medium
+                "
+            >
+                ← Voltar ao menu inicial
+            </button>
+
+        </div>
 
             {/* BOTÕES NO HEADER */}
             <div className="mb-6">
@@ -891,103 +958,112 @@ function Orders() {
                     <div
                         className="
                             flex
-                            items-center
+                            flex justify-between
                             gap-2
                         "
                     >
-                        <button
-                            onClick={() => {
-                                setEditingId(null);
-                                setCustomerName('');
-                                setStatus('Em preparo');
-                                setShowModal(true);
-                            }}
+
+                    <button
+                        onClick={() => {
+                            setEditingId(null);
+                            setCustomerName('');
+                            setStatus('Em preparo');
+                            setShowModal(true);
+                        }}
+                        className="
+                        w-48
+                        bg-purple-600
+                        hover:bg-purple-800
+                        text-white
+                        px-4
+                        py-2
+                        rounded
+                        transition-colors
+                    "
+                    >
+                        Novo pedido
+                    </button>
+
+                        <div
                             className="
-                            w-48
-                            bg-purple-600
-                            hover:bg-purple-800
-                            text-white
-                            px-4
-                            py-2
-                            rounded
-                            transition-colors
-                        "
+                                flex
+                                items-center
+                                gap-2
+                            "
                         >
-                            Novo pedido
-                        </button>
 
-                        <button
-                            onClick={() => setOrderTypeFilter('todos')}
-                            className={`
-                                px-3
-                                py-1
-                                text-sm
-                                rounded-2xl
-                                border
-                                transition-colors
-                                ${orderTypeFilter === 'todos'
-                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                    : 'bg-white text-gray-600 border-gray-300'
-                                }
-                            `}
-                        >
-                            Todos
-                        </button>
+                            <button
+                                onClick={() => setOrderTypeFilter('todos')}
+                                className={`
+                                    px-3
+                                    py-1
+                                    text-sm
+                                    rounded-2xl
+                                    border
+                                    transition-colors
+                                    ${orderTypeFilter === 'todos'
+                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                        : 'bg-white text-gray-600 border-gray-300'
+                                    }
+                                `}
+                            >
+                                Todos
+                            </button>
 
-                        <button
-                            onClick={() => setOrderTypeFilter('balcao')}
-                            className={`
-                                px-3
-                                py-1
-                                text-sm
-                                rounded-2xl
-                                border
-                                transition-colors
-                                ${orderTypeFilter === 'balcao'
-                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                    : 'bg-white text-gray-600 border-gray-300'
-                                }
-                            `}
-                        >
-                            Balcão
-                        </button>
+                            <button
+                                onClick={() => setOrderTypeFilter('balcao')}
+                                className={`
+                                    px-3
+                                    py-1
+                                    text-sm
+                                    rounded-2xl
+                                    border
+                                    transition-colors
+                                    ${orderTypeFilter === 'balcao'
+                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                        : 'bg-white text-gray-600 border-gray-300'
+                                    }
+                                `}
+                            >
+                                Balcão
+                            </button>
 
-                        <button
-                            onClick={() => setOrderTypeFilter('entrega')}
-                            className={`
-                                px-3
-                                py-1
-                                text-sm
-                                rounded-2xl
-                                border
-                                transition-colors
-                                ${orderTypeFilter === 'entrega'
-                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                    : 'bg-white text-gray-600 border-gray-300'
-                                }
-                            `}
-                        >
-                            Entrega
-                        </button>
+                            <button
+                                onClick={() => setOrderTypeFilter('entrega')}
+                                className={`
+                                    px-3
+                                    py-1
+                                    text-sm
+                                    rounded-2xl
+                                    border
+                                    transition-colors
+                                    ${orderTypeFilter === 'entrega'
+                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                        : 'bg-white text-gray-600 border-gray-300'
+                                    }
+                                `}
+                            >
+                                Entrega
+                            </button>
 
-                        <button
-                            onClick={() => setOrderTypeFilter('retirada')}
-                            className={`
-                                px-3
-                                py-1
-                                text-sm
-                                rounded-2xl
-                                border
-                                transition-colors
-                                ${orderTypeFilter === 'retirada'
-                                    ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
-                                    : 'bg-white text-gray-600 border-gray-300'
-                                }
-                            `}
-                        >
-                            Retirada
-                        </button>
-
+                            <button
+                                onClick={() => setOrderTypeFilter('retirada')}
+                                className={`
+                                    px-3
+                                    py-1
+                                    text-sm
+                                    rounded-2xl
+                                    border
+                                    transition-colors
+                                    ${orderTypeFilter === 'retirada'
+                                        ? 'bg-purple-100 text-purple-800 border-purple-800 font-semibold'
+                                        : 'bg-white text-gray-600 border-gray-300'
+                                    }
+                                `}
+                            >
+                                Retirada
+                            </button>
+                        </div>
                     </div>
 
                     <input
@@ -2221,7 +2297,7 @@ function Orders() {
                                         )}
 
                                         {/* Troco */}
-                                        {orderType === 'entrega' && (
+                                        {paymentMethod === 'Dinheiro' && (
 
                                             <div className="w-32 col-span-2">
 
@@ -2247,9 +2323,9 @@ function Orders() {
                                                         type="number"
                                                         step="0.01"
                                                         min="0"
-                                                        value={deliveryFee}
+                                                        value={change}
                                                         onChange={(e) =>
-                                                            setDeliveryFee(e.target.value)
+                                                            setChange(e.target.value)
                                                         }
                                                         placeholder="0,00"
                                                         className="
