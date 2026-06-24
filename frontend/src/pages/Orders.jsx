@@ -70,10 +70,10 @@ function Orders() {
         useState('');
 
     const deliveryPeople = [
-        '11980802020 - Madruga',
-        '11980802020 - Lucas',
-        '11980802020 - Robson',
-        '11980802020 - Pedro'
+        'Madruga - (11) 98080-2020',
+        'Lucas - (11) 98080-2020',
+        'Robson - (11) 98080-2020',
+        'Pedro - (11) 98080-2020'
     ];
 
     const location = useLocation();
