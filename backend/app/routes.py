@@ -34,6 +34,7 @@ def create_client():
         address=data.get('address'),
         complement=data.get('complement'),
         neighborhood=data.get('neighborhood'),
+        delivery_fee=data.get('delivery_fee'),
         is_active=data.get('is_active', True)
     )
 
@@ -63,7 +64,8 @@ def search_client():
         'phone': client.phone,
         'address': client.address,
         'complement': client.complement,
-        'neighborhood': client.neighborhood
+        'neighborhood': client.neighborhood,
+        'delivery_fee': client.delivery_fee
     })
 
 # Atualiza um cliente específico a partir do ID
@@ -78,6 +80,7 @@ def update_client(id):
     client.address = data.get('address', client.address)
     client.complement = data.get('complement', client.complement)
     client.neighborhood = data.get('neighborhood', client.neighborhood)
+    client.delivery_fee = data.get('delivery_fee', client.delivery_fee)
     client.is_active = data.get('is_active', client.is_active)
 
     try:

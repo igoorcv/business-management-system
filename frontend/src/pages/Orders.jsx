@@ -221,6 +221,7 @@ function Orders() {
                         address: address,
                         complement: complement,
                         neighborhood: district,
+                        delivery_fee: deliveryFee,
                         is_active: true
                     }
                 );
@@ -317,7 +318,7 @@ function Orders() {
     };
 
     // Edita pedido
-    const editOrder = (order) => {
+    const editOrder = async (order) => {
 
         console.log(order);
 
@@ -327,6 +328,51 @@ function Orders() {
 
         setCustomerName(order.customer_name || '');
         setStatus(order.status || 'Em preparo');
+        setOrderType(order.order_type || 'balcao');
+        setPhone(order.phone || '');
+
+        const phoneValue = order.phone || '';
+
+        if (phoneValue.length >= 8) {
+
+            try {
+
+                const response = await axios.get(
+                    `http://localhost:5000/clients/search?phone=${phoneValue}`
+                );
+
+                const client = response.data;
+
+                if (client) {
+
+                    setClientFound(true);
+
+                    setClientId(client.id);
+
+                    setCustomerName(client.name);
+
+                    setAddress(client.address || '');
+
+                    setComplement(client.complement || '');
+
+                    setDistrict(client.neighborhood || '');
+
+                    setDeliveryFee(client.delivery_fee || '');
+
+                } else {
+
+                    setClientFound(false);
+
+                    setClientId(null);
+
+                }
+
+            } catch (error) {
+
+                console.error(error);
+
+            }
+        }
 
         setPaymentMethod(order.payment_method || '');
         setPaymentSearch(order.payment_method || '');
@@ -517,6 +563,8 @@ function Orders() {
                 setComplement(client.complement || '');
 
                 setDistrict(client.neighborhood || '');
+
+                setDeliveryFee(client.delivery_fee || '');
 
             } else {
 

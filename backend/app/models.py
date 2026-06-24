@@ -74,6 +74,11 @@ class Client(db.Model):
         db.String(100)
     )
     
+    delivery_fee = db.Column(
+        db.Float,
+        default=0
+    )
+    
     is_active = db.Column(
         db.Boolean, 
         default=True
@@ -87,6 +92,7 @@ class Client(db.Model):
             "address": self.address,
             "complement": self.complement,
             "neighborhood": self.neighborhood,
+            "delivery_fee": self.delivery_fee,
             "is_active": self.is_active
         }    
 
@@ -144,7 +150,6 @@ class Order(db.Model):
     
     order_slip_id = db.Column(
         db.Integer,
-        #default=0,
         nullable=False
     )
     

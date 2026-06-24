@@ -42,6 +42,7 @@ function Clients() {
       address: '',
       complement: '',
       neighborhood: '',
+      delivery_fee: '',
       is_active: true
     });
     setEditingId(null);
@@ -77,6 +78,7 @@ function Clients() {
       address: client.address || '',
       complement: client.complement || '',
       neighborhood: client.neighborhood || '',
+      delivery_fee: client.delivery_fee || '',
       is_active: Boolean(client.is_active)
     });
     setShowModal(true);
@@ -137,6 +139,7 @@ function Clients() {
               <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Telefone</th>
               <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Endereço</th>
               <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Bairro</th>
+              <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Taxa de entrega</th>
               <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Status</th>
               <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Ações</th>
             </tr>
@@ -150,6 +153,7 @@ function Clients() {
                 <td className="px-4 py-2">{c.phone}</td>
                 <td className="px-4 py-2">{c.address || '-'}</td>
                 <td className="px-4 py-2">{c.neighborhood || '-'}</td>
+                <td className="px-4 py-2">{c.delivery_fee || '-'}</td>
 
                 <td className="px-4 py-2">
                   {c.is_active ? (
@@ -251,6 +255,15 @@ function Clients() {
                 value={form.neighborhood}
                 onChange={(e) =>
                   setForm({ ...form, neighborhood: e.target.value })
+                }
+              />
+
+              <input
+                placeholder="Taxa de entrega"
+                className="w-full border p-2 rounded"
+                value={form.delivery_fee}
+                onChange={(e) =>
+                  setForm({ ...form, delivery_fee: e.target.value })
                 }
               />
 
