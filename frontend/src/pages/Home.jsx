@@ -296,42 +296,40 @@ function Home() {
 
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8 text-center">
-
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            Nenhum expediente aberto
-          </h2>
-
-          <p className="text-gray-500 mb-6">
-            Inicie um expediente para começar a registrar pedidos.
-          </p>
-
+        <div className="
+          flex 
+          justify-between 
+          mb-6
+          "
+        >
           <button
             onClick={handleOpenMovement}
             className="
+              w-48
               bg-purple-600
               hover:bg-purple-800
               text-white
-              px-8
-              py-3
+              px-4
+              py-2
               rounded
               transition-colors
             "
           >
             Iniciar expediente
           </button>
-
         </div>
       )}
 
       {/* BODY - Histórico de expedientes */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
 
-        <div className="px-6 py-4 border-b bg-gray-50">
-          <h2 className="font-semibold text-gray-800">
-            Histórico de expedientes
-          </h2>
-        </div>
+      <div className="px-0 py-4">
+        <h2 className="font-semibold text-gray-800">
+          Histórico de expedientes
+        </h2>
+      </div>
+
+      {/* TABLE */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
 
         <table className="w-full">
 
@@ -377,29 +375,29 @@ function Home() {
                 className="border-b border-gray-100 hover:bg-gray-50"
               >
 
-                <td className="px-4 py-3">
+                <td className="px-4 py-2 text-sm text-gray-800">
                   {formatDateTime(
                     movement.opened_at
                   )}
                 </td>
 
-                <td className="px-4 py-3">
+                <td className="px-4 py-2 text-sm text-gray-800">
                   {formatDateTime(
                     movement.closed_at
                   )}
                 </td>
 
-                <td className="px-4 py-3">
+                <td className="px-4 py-2 text-sm text-gray-800">
                   {movement.total_orders}
                 </td>
 
-                <td className="px-4 py-3">
+                <td className="px-4 py-2 text-sm text-gray-800">
                   R$ {Number(
                     movement.revenue
                   ).toFixed(2)}
                 </td>
 
-                <td className="px-4 py-3">
+                <td className="px-4 py-2 text-sm text-gray-800">
                   {calculateDuration(
                     movement.opened_at,
                     movement.closed_at
@@ -409,11 +407,11 @@ function Home() {
                 <td className="px-4 py-3">
 
                   {movement.status === 'OPEN' ? (
-                    <span className="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">
+                    <span className="px-2 py-1 text-xs font-semibold rounded-l bg-green-100 text-green-700">
                       Aberto
                     </span>
                   ) : (
-                    <span className="px-2 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-700">
+                    <span className="px-2 py-1 text-xs font-semibold rounded-l bg-gray-100 text-gray-700">
                       Encerrado
                     </span>
                   )}

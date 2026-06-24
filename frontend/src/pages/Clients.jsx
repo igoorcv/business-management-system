@@ -149,13 +149,16 @@ function Clients() {
             {filteredClients.map((c) => (
               <tr key={c.id} className="border-b hover:bg-gray-50">
 
-                <td className="px-4 py-2">{c.name}</td>
-                <td className="px-4 py-2">{c.phone}</td>
-                <td className="px-4 py-2">{c.address || '-'}</td>
-                <td className="px-4 py-2">{c.neighborhood || '-'}</td>
-                <td className="px-4 py-2">{c.delivery_fee || '-'}</td>
+                <td className="px-4 py-2 text-sm text-gray-800">{c.name}</td>
+                <td className="px-4 py-2 text-sm text-gray-800">{c.phone}</td>
+                <td className="px-4 py-2 text-sm text-gray-800">{c.address || '-'}</td>
+                <td className="px-4 py-2 text-sm text-gray-800">{c.neighborhood || '-'}</td>
+                <td className="px-4 py-2 text-sm text-gray-800">
+                  R$ {Number(
+                    c.delivery_fee
+                  ).toFixed(2) || '-'}</td>
 
-                <td className="px-4 py-2">
+                <td className="px-4 py-2 text-sm text-gray-800">
                   {c.is_active ? (
                     <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
                       Ativo

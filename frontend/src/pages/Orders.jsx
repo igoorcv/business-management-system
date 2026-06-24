@@ -958,7 +958,7 @@ function Orders() {
                     <div
                         className="
                             flex
-                            flex justify-between
+                            justify-between
                             gap-2
                         "
                     >
