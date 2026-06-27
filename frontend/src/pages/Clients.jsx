@@ -111,11 +111,11 @@ function Clients() {
         </p>
       </div>
 
-      {/* SEARCH + BUTTON */}
+      {/* BUTTON + SEARCH */}
       <div className="mb-6 flex justify-between gap-2">
         <button
           onClick={() => setShowModal(true)}
-          className="w-48 bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 rounded"
+          className="w-48 border border-purple-600 bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 rounded transition-colors"
         >
           Novo cliente
         </button>
@@ -131,9 +131,10 @@ function Clients() {
 
       {/* TABLE */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+
         <table className="w-full">
 
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Nome</th>
               <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Telefone</th>
@@ -147,7 +148,7 @@ function Clients() {
 
           <tbody>
             {filteredClients.map((c) => (
-              <tr key={c.id} className="border-b hover:bg-gray-50">
+              <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
 
                 <td className="px-4 py-2 text-sm text-gray-800">{c.name}</td>
                 <td className="px-4 py-2 text-sm text-gray-800">{c.phone}</td>
@@ -158,30 +159,30 @@ function Clients() {
                     c.delivery_fee
                   ).toFixed(2) || '-'}</td>
 
-                <td className="px-4 py-2 text-sm text-gray-800">
+                <td className="px-4 py-2">
                   {c.is_active ? (
-                    <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                    <span className="px-3 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">
                       Ativo
                     </span>
                   ) : (
-                    <span className="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                    <span className="px-3 py-1 text-xs font-semibold rounded bg-red-100 text-red-700">
                       Inativo
                     </span>
                   )}
                 </td>
 
-                <td className="px-4 py-2 text-right">
+                <td className="px-4 py-2 text-left flex gap-2">
 
                   <button
                     onClick={() => startEdit(c)}
-                    className="w-30 mr-2 px-3 py-1 border border-blue-600 text-blue-600 rounded hover:bg-blue-50"
+                    className="w-30 px-3 py-1 text-xs border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors"
                   >
                     Editar
                   </button>
 
                   <button
                     onClick={() => deleteClient(c.id)}
-                    className="w-30 px-3 py-1 border border-red-600 text-red-600 rounded hover:bg-red-50"
+                    className="w-30 px-3 py-1 text-xs border border-red-600 text-red-600 rounded hover:bg-red-50 transition-colors"
                   >
                     Excluir
                   </button>

@@ -1388,7 +1388,7 @@ function Orders() {
                                                                                     )
                                                                                 }
 
-                                                                                {/* Cancelar */}
+                                                                                {/* Cancelar*/}
                                                                                 <button
                                                                                     onClick={(e) => {
 

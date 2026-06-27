@@ -126,6 +126,8 @@ function Products() {
           onClick={() => setShowModal(true)}
           className="
             w-48
+            border 
+            border-purple-600
             bg-purple-600
             hover:bg-purple-800
             text-white
@@ -182,7 +184,7 @@ function Products() {
               <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">
                 Estado
               </th>
-              <th className="text-right px-4 py-3 text-sm font-semibold text-gray-700">
+              <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">
                 Ações
               </th>
             </tr>
@@ -196,11 +198,13 @@ function Products() {
                 className="border-b border-gray-100 hover:bg-gray-50 transition"
               >
 
-                <td className="px-4 py-2 text-sm font-medium text-gray-700">
-                  {p.category}
+                <td className="px-4 py-2 text-sm text-gray-800 font-medium">
+                  <span className="px-3 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-700">
+                    {p.category}
+                  </span>
                 </td>
 
-                <td className="px-4 py-2 text-sm text-gray-800">
+                <td className="px-4 py-2 text-sm text-gray-800 font-medium">
                   {p.code || '-'}
                 </td>
 
@@ -208,60 +212,34 @@ function Products() {
                   {p.name}
                 </td>
 
-                <td className="px-4 py-2 text-sm text-gray-700">
+                <td className="px-4 py-2 text-sm text-gray-800">
                   R$ {Number(p.price).toFixed(2)}
                 </td>
 
-                <td className="px-4 py-2 text-sm">
+                <td className="px-4 py-2">
                   {p.is_active ? (
-                    <span className="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">
+                    <span className="px-3 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">
                       Ativo
                     </span>
                   ) : (
-                    <span className="px-2 py-1 text-xs font-semibold rounded bg-red-100 text-red-700">
+                    <span className="px-3 py-1 text-xs font-semibold rounded bg-red-100 text-red-700">
                       Inativo
                     </span>
                   )}
                 </td>
 
-                <td className="px-4 py-2 text-right whitespace-nowrap">
+                <td className="px-4 py-2 text-left flex gap-2">
 
                   <button
                     onClick={() => startEdit(p)}
-                    className="
-                      w-30
-                      flex-1
-                      bg-white
-                      border
-                      border-blue-700
-                      hover:bg-blue-50
-                      text-blue-700
-                      px-3
-                      py-0.8
-                      mr-2
-                      rounded
-                      transition-colors  
-                    "
+                    className="w-30 px-3 py-1 text-xs border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors"
                   >
                     Editar
                   </button>
 
                   <button
                     onClick={() => deleteProduct(p.id)}
-                    className="
-                      w-30
-                      flex-1
-                      bg-white
-                      border
-                      border-red-600
-                      text-red-600
-                      hover:bg-red-50
-                      px-3
-                      py-0.8
-                      mr-2
-                      rounded
-                      transition-colors
-                    "
+                    className="w-30 px-3 py-1 text-xs border border-red-600 text-red-600 rounded hover:bg-red-50 transition-colors"
                   >
                     Excluir
                   </button>

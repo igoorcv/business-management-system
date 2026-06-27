@@ -297,36 +297,29 @@ function Home() {
         </div>
       ) : (
         <div className="
+          mb-6 
           flex 
-          justify-between 
-          mb-6
-          "
+          justify-between
+          gap-2
+        "
         >
           <button
             onClick={handleOpenMovement}
-            className="
-              w-48
-              bg-purple-600
-              hover:bg-purple-800
-              text-white
-              px-4
-              py-2
-              rounded
-              transition-colors
-            "
+            className="w-48 border border-purple-600 bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 rounded transition-colors"
           >
             Iniciar expediente
           </button>
+
         </div>
       )}
 
-      {/* BODY - Histórico de expedientes */}
-
+      {/* BODY - Histórico de expedientes
       <div className="px-0 py-4">
         <h2 className="font-semibold text-gray-800">
           Histórico de expedientes
         </h2>
       </div>
+      */}
 
       {/* TABLE */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
@@ -356,11 +349,11 @@ function Home() {
                 Duração
               </th>
 
-              <th className="text-right px-4 py-3 text-sm font-semibold text-gray-700">
+              <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">
                 Status
               </th>
 
-              <th className="text-right px-4 py-3 text-sm font-semibold text-gray-700">
+              <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">
                 Ações
               </th>
             </tr>
@@ -372,7 +365,7 @@ function Home() {
             {movements.map((movement) => (
               <tr
                 key={movement.id}
-                className="border-b border-gray-100 hover:bg-gray-50"
+                className="border-b border-gray-100 hover:bg-gray-50 transition"
               >
 
                 <td className="px-4 py-2 text-sm text-gray-800">
@@ -387,11 +380,11 @@ function Home() {
                   )}
                 </td>
 
-                <td className="px-4 py-2 text-sm text-gray-800">
+                <td className="px-4 py-2 text-sm text-gray-800 font-medium">
                   {movement.total_orders}
                 </td>
 
-                <td className="px-4 py-2 text-sm text-gray-800">
+                <td className="px-4 py-2 text-sm text-gray-800 font-medium">
                   R$ {Number(
                     movement.revenue
                   ).toFixed(2)}
@@ -404,21 +397,21 @@ function Home() {
                   )}
                 </td>
 
-                <td className="px-4 py-3">
+                <td className="px-4 py-2">
 
                   {movement.status === 'OPEN' ? (
-                    <span className="px-2 py-1 text-xs font-semibold rounded-l bg-green-100 text-green-700">
+                    <span className="px-3 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">
                       Aberto
                     </span>
                   ) : (
-                    <span className="px-2 py-1 text-xs font-semibold rounded-l bg-gray-100 text-gray-700">
+                    <span className="px-3 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-700">
                       Encerrado
                     </span>
                   )}
 
                 </td>
 
-                <td className="px-4 py-3 text-right flex justify-end gap-3">
+                <td className="px-4 py-2 text-left flex gap-2">
 
                   <button
                     onClick={async () => {
@@ -429,34 +422,14 @@ function Home() {
                       setSelectedMovement(movement);
                       setShowCloseModal(true);
                     }}
-                    className="
-                      w-30
-                      border
-                      border-blue-600
-                      text-blue-600
-                      hover:bg-blue-50
-                      px-3
-                      py-1
-                      rounded
-                      transition-colors
-                    "
+                    className="w-30 px-3 py-1 text-xs border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors"
                   >
                     Ver resumo
                   </button>
 
                   <button
                     onClick={() => navigate(`/orders?movement_id=${movement.id}`)}
-                    className="
-                      w-30
-                      border
-                      border-blue-600
-                      text-blue-600
-                      hover:bg-blue-50
-                      px-3
-                      py-1
-                      rounded
-                      transition-colors
-                    "
+                    className="w-30 px-3 py-1 text-xs border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors"
                   >
                     Ver pedidos
                   </button>
