@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import MovementSummaryModal from '../components/MovementSummaryModal';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function Home() {
 
@@ -20,6 +21,7 @@ function Home() {
   const [selectedMovement, setSelectedMovement] = useState(null);
   const [movementSummary, setMovementSummary] = useState(null);
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   
 
   // ==================================================
@@ -29,14 +31,22 @@ function Home() {
   // Consulta todos os expediente independente do status
   const fetchMovements = async () => {
     try {
-      const response = await axios.get(
-        'http://localhost:5000/movements'
-      );
+        const response = await axios.get(
+          'http://localhost:5000/movements'
+        );
 
-      setMovements(response.data);
+        setMovements(response.data);
+
     } catch (error) {
-      console.error(error);
+
+        console.error(error);
+
+    } finally {
+
+        setLoading(false);
+
     }
+
   };
 
   // Consulta um expediente específico que possui status OPEN
@@ -361,6 +371,124 @@ function Home() {
           </thead>
 
           {/* body da table */}
+          <tbody>
+
+            {loading ? (
+
+                <tr>
+
+                    <td
+                        colSpan="6"
+                        className="py-10"
+                    >
+
+                        <LoadingSpinner
+                            message="Carregando expedientes..."
+                        />
+
+                    </td>
+
+                </tr>
+
+            ) : movements.length === 0 ? (
+
+                <tr>
+
+                    <td
+                        colSpan="6"
+                        className="text-center py-10 text-gray-500"
+                    >
+                        Nenhum expediente encontrado
+                    </td>
+
+                </tr>
+
+            ) : (
+
+                movements.map((movement) => (
+                  <tr
+                    key={movement.id}
+                    className="border-b border-gray-100 hover:bg-gray-50 transition"
+                  >
+
+                    <td className="px-4 py-2 text-sm text-gray-800">
+                      {formatDateTime(
+                        movement.opened_at
+                      )}
+                    </td>
+
+                    <td className="px-4 py-2 text-sm text-gray-800">
+                      {formatDateTime(
+                        movement.closed_at
+                      )}
+                    </td>
+
+                    <td className="px-4 py-2 text-sm text-gray-800 font-medium">
+                      {movement.total_orders}
+                    </td>
+
+                    <td className="px-4 py-2 text-sm text-gray-800 font-medium">
+                      R$ {Number(
+                        movement.revenue
+                      ).toFixed(2)}
+                    </td>
+
+                    <td className="px-4 py-2 text-sm text-gray-800">
+                      {calculateDuration(
+                        movement.opened_at,
+                        movement.closed_at
+                      )}
+                    </td>
+
+                    <td className="px-4 py-2">
+
+                      {movement.status === 'OPEN' ? (
+                        <span className="px-3 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">
+                          Aberto
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-700">
+                          Encerrado
+                        </span>
+                      )}
+
+                    </td>
+
+                    <td className="px-4 py-2 text-left flex gap-2">
+
+                      <button
+                        onClick={async () => {
+                          const response = await axios.get(
+                            `http://localhost:5000/movements/${movement.id}/summary`
+                          );
+                          setMovementSummary(response.data);
+                          setSelectedMovement(movement);
+                          setShowCloseModal(true);
+                        }}
+                        className="w-30 px-3 py-1 text-xs border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors"
+                      >
+                        Ver resumo
+                      </button>
+
+                      <button
+                        onClick={() => navigate(`/orders?movement_id=${movement.id}`)}
+                        className="w-30 px-3 py-1 text-xs border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors"
+                      >
+                        Ver pedidos
+                      </button>
+
+                    </td>
+
+                  </tr>
+                )
+              )
+            )
+          }
+
+        </tbody>
+
+
+
           <tbody>
 
             {movements.map((movement) => (
