@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import MovementSummaryModal from '../components/MovementSummaryModal';
 
 function Home() {
 
@@ -446,215 +447,18 @@ function Home() {
       </div>
 
       {/* MODAL */}
-      {showCloseModal && (
-
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-
-          <div className="
-            bg-white 
-            rounded-lg 
-            shadow-lg 
-            w-[700px] 
-            max-w-[95vw]
-            flex
-            flex-col
-          ">
-
-            {/* Header */}
-            <div className="px-6 py-5 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-
-              <h2 className="text-xl font-semibold text-gray-800">
-                Visualização de resumo
-              </h2>
-
-            </div>
-
-            {/* BODY */}
-            <div className="w-full px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
-
-              {/* RESUMO CARDS */}
-              <div className="space-y-4">
-
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                  Visão geral
-                </h3>
-
-                {/* linha 1 */}
-                <div className="grid grid-cols-2 gap-4">
-                  
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    <div className="text-sm text-gray-500">Total de pedidos</div>
-                    <div className="text-2xl font-bold text-gray-800">
-                      {movementSummary?.total_orders || 0}
-                    </div>
-                  </div>
-
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    <div className="text-sm text-gray-500">Faturamento</div>
-                    <div className="text-2xl font-bold text-green-600">
-                      R$ {Number(movementSummary?.revenue || 0).toFixed(2)}
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* linha 2 (3 colunas) */}
-                <div className="grid grid-cols-3 gap-4 w-full">
-
-                  <div className="border rounded-lg p-4 bg-white">
-                    <div className="text-sm text-gray-500">Balcão</div>
-                    <div className="text-xl font-semibold text-gray-800">
-                      {movementSummary?.counter_orders || 0}
-                    </div>
-                  </div>
-
-                  <div className="border rounded-lg p-4 bg-white">
-                    <div className="text-sm text-gray-500">Retirada</div>
-                    <div className="text-xl font-semibold text-gray-800">
-                      {movementSummary?.pickup_orders || 0}
-                    </div>
-                  </div>
-
-                  <div className="border rounded-lg p-4 bg-white">
-                    <div className="text-sm text-gray-500">Entrega</div>
-                    <div className="text-xl font-semibold text-gray-800">
-                      {movementSummary?.delivery_orders || 0}
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* PRODUTOS */}
-              <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                  Produtos mais vendidos
-                </h3>
-
-                <div className="space-y-2">
-                  {movementSummary?.top_products?.map((p, i) => (
-                    <div
-                      key={i}
-                      className="flex justify-between border rounded px-3 py-2 bg-white"
-                    >
-                      <span className="text-gray-700">
-                        {p.product_name}
-                      </span>
-
-                      <span className="font-semibold text-gray-800">
-                        {p.quantity}x
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* ENTREGADORES */}
-              {movementSummary?.delivery_people?.length > 0 && (
-                <div>
-                  
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                    Entregadores
-                  </h3>
-
-                  <div className="space-y-3">
-
-                    {movementSummary.delivery_people.map((driver, i) => (
-                      
-                      <div
-                        key={i}
-                        className="border rounded-lg p-4 bg-white flex items-center justify-between"
-                      >
-
-                        {/* LADO ESQUERDO */}
-                        <div className="space-y-1">
-
-                          <div className="text-gray-900 font-semibold">
-                            {driver.name}
-                          </div>
-
-                          <div className="text-sm text-gray-500 mt-1">
-                            Comandas: {driver.order_slip_ids?.length > 0
-                              ? driver.order_slip_ids.map(order_slip_id => `#${order_slip_id}`).join(', ')
-                              : '-'}
-                          </div>
-
-                        </div>
-
-                        {/* LADO DIREITO */}
-                        <div className="text-right">
-
-                          <div className="text-sm text-gray-500">
-                            Comissão
-                          </div>
-
-                          <div className="text-lg font-bold text-green-600">
-                            R$ {Number(driver.payment || 0).toFixed(2)}
-                          </div>
-
-                        </div>
-
-                      </div>
-
-                    ))}
-
-                  </div>
-
-                </div>
-              )}
-
-            </div>
-
-            
-
-            {/* Botões */}
-            <div className="p-4 px-6 border-t flex justify-end gap-4">
-
-              {/* Sempre existe botão Fechar */}
-              <button
-                onClick={() => setShowCloseModal(false)}
-                className="
-                  w-32
-                  px-8
-                  py-2
-                  rounded
-                  border
-                  border-purple-600
-                  text-purple-600
-                  bg-white
-                  hover:bg-purple-50
-                  transition-colors
-                "
-              >
-                Fechar
-              </button>
-
-              {/* Só aparece se estiver OPEN */}
-              {selectedMovement?.status === 'OPEN' && (
-                <button
-                  onClick={handleCloseMovement}
-                  className="
-                    w-32
-                    px-4
-                    py-2
-                    rounded
-                    text-white
-                    transition-colors
-                    bg-red-600 
-                    hover:bg-red-700
-                  "
-                >
-                  Encerrar
-                </button>
-              )}
-
-            </div>
-
-          </div>
-
-        </div>
-      )}
+      
+      <MovementSummaryModal
+          open={showCloseModal}
+          summary={movementSummary}
+          showConfirmButton={
+              selectedMovement?.status === 'OPEN'
+                  ? true
+                  : false
+          }
+          onClose={() => setShowCloseModal(false)}
+          onConfirmClose={handleCloseMovement}
+      />
 
     </div>
   );

@@ -12,6 +12,7 @@ import {
     Droppable,
     Draggable
 } from '@hello-pangea/dnd';
+import MovementSummaryModal from '../components/MovementSummaryModal';
 
 function Orders() {
 
@@ -80,6 +81,10 @@ function Orders() {
 
     const queryParams = new URLSearchParams(location.search);
     const movementId = queryParams.get('movement_id');
+
+    const [showSummaryModal, setShowSummaryModal] = useState(false);
+    const [movementSummary, setMovementSummary] = useState(null);
+
 
     // Busca produtos
     const fetchProducts = async () => {
@@ -909,6 +914,47 @@ function Orders() {
     const isDeliveryValid =
         selectedDeliveryPerson.trim() !== '';
 
+    //
+    const handleOpenSummary = async () => {
+        try {
+
+            const movement = await axios.get(
+                'http://localhost:5000/movements/active'
+            );
+
+            const summary = await axios.get(
+                `http://localhost:5000/movements/${movement.data.id}/summary`
+            );
+
+            setMovementSummary(summary.data);
+
+            setShowSummaryModal(true);
+
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleCloseMovement = async () => {
+        try {
+
+            const movement = await axios.get(
+                'http://localhost:5000/movements/active'
+            );
+
+            await axios.post(
+                `http://localhost:5000/movements/${movement.data.id}/close`
+            );
+
+            setShowSummaryModal(false);
+
+            navigate('/home');
+
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     // FRONT-END
     return (
 
@@ -926,20 +972,42 @@ function Orders() {
                 </p>
             </div>
 
-            <button
-                onClick={() => navigate('/home')}
-                className="
-                    px-4
+            <div className="flex gap-3">
+
+                <button
+                    onClick={() => navigate('/home')}
+                    className="
+                        px-4
+                        py-2
+                        rounded
+                        text-purple-600
+                        bg-purple-50
+                        hover:bg-purple-100
+                        transition-colors
+                        font-medium
+                    "
+                >
+                    ← Voltar ao menu inicial
+                </button>
+
+                <button
+                    onClick={handleOpenSummary}
+                    className="
+                    w-48
+                    bg-red-50
+                    hover:bg-red-100
+                    text-red-600
+                    px-5
                     py-2
                     rounded
-                    text-purple-600
-                    hover:bg-purple-50
-                    transition-colors
                     font-medium
-                "
-            >
-                ← Voltar ao menu inicial
-            </button>
+                    transition-colors
+                    "
+                >
+                    Encerrar expediente
+                </button>
+
+            </div>
 
         </div>
 
@@ -951,7 +1019,7 @@ function Orders() {
                         mb-6
                         flex
                         flex justify-between
-                        gap-2
+                        gap-3
                     "
                 >
 
@@ -959,7 +1027,7 @@ function Orders() {
                         className="
                             flex
                             justify-between
-                            gap-2
+                            gap-3
                         "
                     >
 
@@ -988,7 +1056,7 @@ function Orders() {
                             className="
                                 flex
                                 items-center
-                                gap-2
+                                gap-3
                             "
                         >
 
@@ -1290,6 +1358,7 @@ function Orders() {
                                                                                 ${getWaitingColor(waitingMinutes)}
                                                                             `}
                                                                             >
+                                                                                🖨️ 
                                                                                 🕓 {waitingMinutes} min
                                                                             </span>
 
@@ -1559,7 +1628,7 @@ function Orders() {
 
             </DragDropContext>
 
-            {/* MODAL PRINCIPAL */}
+            {/* MODAL DE PEDIDOS */}
             {
                 showModal && (
 
@@ -1874,7 +1943,7 @@ function Orders() {
                                                         ...provided,
                                                         minHeight: '42px',
                                                         height: '42px',
-                                                        borderColor: '#E9D5FF',
+                                                        borderColor: 'border-gray-300',
                                                         borderRadius: '0.375rem',
                                                         boxShadow: 'none',
                                                     }),
@@ -2530,7 +2599,7 @@ function Orders() {
                 )
             }
 
-            {/* MODAL ENTREGADOR */}
+            {/* MODAL DE ENTREGADOR */}
             {
                 showDeliveryModal && (
 
@@ -2711,6 +2780,15 @@ function Orders() {
 
                 )
             }
+
+            {/* MODAL DE ENCERRAR EXPEDIENTES */}
+            <MovementSummaryModal
+                open={showSummaryModal}
+                summary={movementSummary}
+                showConfirmButton={true}
+                onClose={() => setShowSummaryModal(false)}
+                onConfirmClose={handleCloseMovement}
+            />
 
         </div>
 

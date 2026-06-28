@@ -22,6 +22,9 @@ function Products() {
 
   const [search, setSearch] = useState('');
 
+  const [categorySearch, setCategorySearch] = useState('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
   const [form, setForm] = useState({
     code: '',
     name: '',
@@ -29,6 +32,11 @@ function Products() {
     category: '',
     is_active: true
   });
+
+  const inputClass =
+  "w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500";
+
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
   const fetchProducts = async () => {
     try {
@@ -45,6 +53,9 @@ function Products() {
 
   const resetForm = () => {
     setForm({ code: '', name: '', price: '', category: '', is_active: true });
+    setCategorySearch('');
+    setShowCategoryDropdown(false);
+    setShowStatusDropdown(false);
     setEditingId(null);
   };
 
@@ -71,13 +82,20 @@ function Products() {
 
   const startEdit = (product) => {
     setEditingId(product.id);
+
     setForm({
       code: product.code || '',
-      name: product.name,
-      price: product.price,
-      category: product.category,
+      name: product.name || '',
+      price: product.price || '',
+      category: product.category || '',
       is_active: Boolean(product.is_active)
     });
+
+    setCategorySearch(product.category || '');
+    setShowCategoryDropdown(false);
+
+    setShowStatusDropdown(false);
+
     setShowModal(true);
   };
 
@@ -280,10 +298,10 @@ function Products() {
             </div>
 
             {/* BODY */}
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-5 col-span-4">
 
               <input
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Código (opcional)"
                 value={form.code}
                 onChange={(e) =>
@@ -292,7 +310,8 @@ function Products() {
               />
 
               <input
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500
+"
                 placeholder="Nome"
                 value={form.name}
                 onChange={(e) =>
@@ -302,7 +321,7 @@ function Products() {
 
               <input
                 type="number"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Preço"
                 value={form.price}
                 onChange={(e) =>
@@ -310,34 +329,149 @@ function Products() {
                 }
               />
 
-              <select
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500"
-                value={form.category}
-                onChange={(e) =>
-                  setForm({ ...form, category: e.target.value })
-                }
-              >
-                <option value="">Selecione a categoria</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <div className="w-full space-y-5">
 
-              <select
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500"
-                value={form.is_active}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    is_active: e.target.value === "true"
-                  })
-                }
-              >
-                <option value={true}>Ativo</option>
-                <option value={false}>Inativo</option>
-              </select>
+                <input
+                  type="text"
+                  value={categorySearch}
+                  placeholder="Selecione uma categoria"
+                  onChange={(e) => {
+                    setCategorySearch(e.target.value);
+                    setForm({ ...form, category: '' });
+                    setShowCategoryDropdown(true);
+                  }}
+                  onFocus={() => setShowCategoryDropdown(true)}
+                  className={inputClass}
+                />
+
+                {form.category && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm({ ...form, category: '' });
+                      setCategorySearch('');
+                    }}
+                    className="
+                      absolute
+                      right-3
+                      top-1/2
+                      -translate-y-1/2
+                      text-gray-400
+                      hover:text-red-500
+                      font-bold
+                      text-lg
+                    "
+                  >
+                    ×
+                  </button>
+                )}
+
+                {showCategoryDropdown && (
+
+                  <div className="
+                    absolute
+                    bottom-full
+                    mb-1
+                    z-50
+                    w-full
+                    bg-white
+                    border
+                    border-gray-300
+                    rounded-md
+                    shadow-lg
+                    max-h-60
+                    overflow-y-auto
+                  ">
+
+                    {categories
+                      .filter(c =>
+                        c.toLowerCase().includes(categorySearch.toLowerCase())
+                      )
+                      .map((c) => (
+
+                        <div
+                          key={c}
+                          onClick={() => {
+                            setForm({ ...form, category: c });
+                            setCategorySearch(c);
+                            setShowCategoryDropdown(false);
+                          }}
+                          className="
+                            px-3
+                            py-2
+                            cursor-pointer
+                            hover:bg-purple-200
+                          "
+                        >
+                          {c}
+                        </div>
+
+                    ))}
+
+                  </div>
+
+                )}
+
+              </div>
+
+              <div className="w-full relative">
+
+                <input
+                  type="text"
+                  readOnly
+                  value={
+                    form.is_active === true
+                      ? 'Ativo'
+                      : form.is_active === false
+                        ? 'Inativo'
+                        : ''
+                  }
+                  placeholder="Selecione o status"
+                  onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                  className={inputClass}
+                />
+
+                <div className="
+                  absolute
+                  bottom-full
+                  mb-1
+                  z-50
+                  w-full
+                  bg-white
+                  border
+                  border-gray-300
+                  rounded-md
+                  shadow-lg
+                  overflow-hidden
+                ">
+
+                  {showStatusDropdown && (
+                    <>
+                      <div
+                        onClick={() => {
+                          setForm({ ...form, is_active: true });
+                          setShowStatusDropdown(false);
+                        }}
+                        className="px-3 py-2 cursor-pointer hover:bg-purple-200"
+                      >
+                        Ativo
+                      </div>
+
+                      <div
+                        onClick={() => {
+                          setForm({ ...form, is_active: false });
+                          setShowStatusDropdown(false);
+                        }}
+                        className="px-3 py-2 cursor-pointer hover:bg-purple-200"
+                      >
+                        Inativo
+                      </div>
+                    </>
+                  )}
+
+                </div>
+
+              </div>
 
             </div>
 
