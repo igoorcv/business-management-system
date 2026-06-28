@@ -27,23 +27,41 @@ def get_clients():
 def create_client():
 
     data = request.get_json()
+    
+    existing_client = Client.query.filter_by(phone=data['phone']).first()
 
+    if existing_client:
+        return jsonify({
+            "message": "Já existe um cliente cadastrado com este telefone."
+        }), 409
+    
     client = Client(
         name=data['name'],
         phone=data['phone'],
         address=data.get('address'),
         complement=data.get('complement'),
         neighborhood=data.get('neighborhood'),
-        delivery_fee=data.get('delivery_fee'),
+        delivery_fee = data.get('delivery_fee') or None,
         is_active=data.get('is_active', True)
     )
+    
+    from sqlalchemy.exc import IntegrityError
+    
+    try:
+        db.session.add(client)
+        db.session.commit()
+        
+        return jsonify({
+            'id': client.id
+        }), 201
 
-    db.session.add(client)
-    db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
 
-    return jsonify({
-        'id': client.id
-    }), 201
+        return jsonify({
+            "message": "Já existe um cliente cadastrado com este telefone."
+        }), 409
+
 
 # Consulta um cliente específico a partir do Phone
 @routes.route('/clients/search')
@@ -75,12 +93,16 @@ def update_client(id):
 
     data = request.get_json()
 
+    delivery_fee = data.get('delivery_fee')
+    if delivery_fee == '':
+        delivery_fee = 0
+
     client.name = data.get('name', client.name)
     client.phone = data.get('phone', client.phone)
     client.address = data.get('address', client.address)
     client.complement = data.get('complement', client.complement)
     client.neighborhood = data.get('neighborhood', client.neighborhood)
-    client.delivery_fee = data.get('delivery_fee', client.delivery_fee)
+    client.delivery_fee = delivery_fee if 'delivery_fee' in data else client.delivery_fee
     client.is_active = data.get('is_active', client.is_active)
 
     try:

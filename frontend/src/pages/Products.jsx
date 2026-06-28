@@ -4,6 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const categoryOrder = {
   Bebida: 1,
@@ -28,6 +29,8 @@ function Products() {
   const categoryDropdownRef = useRef(null);
   const statusDropdownRef = useRef(null);
 
+  const [loading, setLoading] = useState(true);
+
   const [form, setForm] = useState({
     code: '',
     name: '',
@@ -43,11 +46,23 @@ function Products() {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/products');
-      setProducts(res.data);
+
+        setLoading(true);
+        
+        const res = await axios.get('http://localhost:5000/products');
+        
+        setProducts(res.data);
+
     } catch (err) {
-      console.error(err);
+
+        console.error(err);
+
+    } finally {
+
+        setLoading(false);
+    
     }
+      
   };
 
   useEffect(() => {
@@ -233,78 +248,101 @@ function Products() {
                 Ações
               </th>
             </tr>
-          </thead>
+          </thead>    
 
           <tbody>
 
-            {sortedProducts.map((p) => (
-              <tr
-                key={p.id}
-                className="border-b border-gray-100 hover:bg-gray-50 transition"
-              >
+            {loading ? (
 
-                <td className="px-4 py-2 text-sm text-gray-800 font-medium">
-                  <span className="px-3 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-700">
-                    {p.category}
-                  </span>
-                </td>
+                <tr>
 
-                <td className="px-4 py-2 text-sm text-gray-800 font-medium">
-                  {p.code || '-'}
-                </td>
+                    <td
+                        colSpan="6"
+                        className="py-10"
+                    >
 
-                <td className="px-4 py-2 text-sm text-gray-800">
-                  {p.name}
-                </td>
+                        <LoadingSpinner
+                            message="Carregando produtos..."
+                        />
 
-                <td className="px-4 py-2 text-sm text-gray-800">
-                  R$ {Number(p.price).toFixed(2)}
-                </td>
+                    </td>
 
-                <td className="px-4 py-2">
-                  {p.is_active ? (
-                    <span className="px-3 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">
-                      Ativo
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 text-xs font-semibold rounded bg-red-100 text-red-700">
-                      Inativo
-                    </span>
-                  )}
-                </td>
+                </tr>
 
-                <td className="px-4 py-2 text-left flex gap-2">
+            ) : sortedProducts.length === 0 ? (
 
-                  <button
-                    onClick={() => startEdit(p)}
-                    className="w-30 px-3 py-1 text-xs border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors"
-                  >
-                    Editar
-                  </button>
+                <tr>
 
-                  <button
-                    onClick={() => deleteProduct(p.id)}
-                    className="w-30 px-3 py-1 text-xs border border-red-600 text-red-600 rounded hover:bg-red-50 transition-colors"
-                  >
-                    Excluir
-                  </button>
+                    <td
+                        colSpan="6"
+                        className="text-center py-10 text-gray-500"
+                    >
+                        Nenhum produto encontrado
+                    </td>
 
-                </td>
+                </tr>
 
-              </tr>
-            ))}
+            ) : (
 
-            {sortedProducts.length === 0 && (
-              <tr>
-                <td
-                  colSpan="5"
-                  className="text-center py-10 text-gray-500"
-                >
-                  Nenhum produto encontrado
-                </td>
-              </tr>
-            )}
+                sortedProducts.map((p) => (
+                      <tr
+                        key={p.id}
+                        className="border-b border-gray-100 hover:bg-gray-50 transition"
+                      >
 
+                        <td className="px-4 py-2 text-sm text-gray-800 font-medium">
+                          <span className="px-3 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-700">
+                            {p.category}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-2 text-sm text-gray-800 font-medium">
+                          {p.code || '-'}
+                        </td>
+
+                        <td className="px-4 py-2 text-sm text-gray-800">
+                          {p.name}
+                        </td>
+
+                        <td className="px-4 py-2 text-sm text-gray-800">
+                          R$ {Number(p.price).toFixed(2)}
+                        </td>
+
+                        <td className="px-4 py-2">
+                          {p.is_active ? (
+                            <span className="px-3 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">
+                              Ativo
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 text-xs font-semibold rounded bg-red-100 text-red-700">
+                              Inativo
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-2 text-left flex gap-2">
+
+                          <button
+                            onClick={() => startEdit(p)}
+                            className="w-30 px-3 py-1 text-xs border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors"
+                          >
+                            Editar
+                          </button>
+
+                          <button
+                            onClick={() => deleteProduct(p.id)}
+                            className="w-30 px-3 py-1 text-xs border border-red-600 text-red-600 rounded hover:bg-red-50 transition-colors"
+                          >
+                            Excluir
+                          </button>
+
+                        </td>
+
+                      </tr>
+                    )
+                  )
+                )
+              }
           </tbody>
 
         </table>
@@ -416,7 +454,7 @@ function Products() {
 
               <input
                 className="w-full border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Código (opcional)"
+                placeholder="Código"
                 value={form.code}
                 onChange={(e) =>
                   setForm({ ...form, code: e.target.value })
