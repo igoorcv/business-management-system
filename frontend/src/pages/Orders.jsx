@@ -1324,7 +1324,8 @@ function Orders() {
 
                                                                     {/* Botões */}
                                                                     {
-                                                                        order.status !== 'Finalizado' && (
+                                                                        order.status !== 'Finalizado'
+                                                                        && (
 
                                                                             <div
                                                                                 className="
@@ -1389,6 +1390,80 @@ function Orders() {
                                                                                 }
 
                                                                                 {/* Cancelar*/}
+                                                                                {
+                                                                                    (
+                                                                                        order.status === 'Em preparo' ||
+                                                                                        order.status === 'Pronto'
+                                                                                    ) && (
+
+                                                                                        <button
+                                                                                            onClick={(e) => {
+
+                                                                                                e.stopPropagation();
+
+                                                                                                if (
+                                                                                                    window.confirm(
+                                                                                                        'Deseja excluir este pedido?'
+                                                                                                    )
+                                                                                                ) {
+                                                                                                    deleteOrder(order.id);
+                                                                                                }
+
+                                                                                            }}
+                                                                                            className="
+                                                                                            flex-1
+                                                                                            bg-white
+                                                                                            border
+                                                                                            border-red-600
+                                                                                            text-red-600
+                                                                                            hover:bg-red-50
+                                                                                            px-4
+                                                                                            py-1
+                                                                                            rounded
+                                                                                            transition-colors
+                                                                                        "
+                                                                                        >
+                                                                                            Cancelar
+                                                                                        </button>
+
+                                                                                    )
+                                                                                }
+                                                                                
+
+                                                                            </div>
+
+                                                                        )
+                                                                    }
+                                                                    {
+                                                                        order.status === 'Saiu para entrega' && (
+
+                                                                            <div
+                                                                                className="
+                                                                                flex
+                                                                                gap-2
+                                                                                mt-5
+                                                                            "
+                                                                            >
+                                                                                {/* Ver pedidos */}
+                                                                                <button
+                                                                                    onClick={() => viewOrder(order)}
+                                                                                    className="
+                                                                                    flex-1
+                                                                                    bg-white
+                                                                                    border
+                                                                                    border-purple-600
+                                                                                    text-purple-600
+                                                                                    hover:bg-purple-50
+                                                                                    px-4
+                                                                                    py-1
+                                                                                    rounded
+                                                                                    transition-colors
+                                                                                "
+                                                                                >
+                                                                                    Ver pedido
+                                                                                </button>
+
+                                                                                {/* Cancelar */}
                                                                                 <button
                                                                                     onClick={(e) => {
 
@@ -1456,7 +1531,6 @@ function Orders() {
 
                                                                         )
                                                                     }
-
 
                                                                 </div>
 
