@@ -5,6 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Pagination from '../components/Pagination';
 
 function Clients() {
   const [clients, setClients] = useState([]);
@@ -20,6 +21,8 @@ function Clients() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
 
   const inputClass =
@@ -75,6 +78,10 @@ function Clients() {
       };
     }
   );
+
+  useEffect(() => {
+        setCurrentPage(1);
+    }, [search, clients]);
 
   const resetForm = () => {
     setForm({
@@ -161,8 +168,24 @@ function Clients() {
     form.phone.trim() !== '' &&
     form.address.trim() !== '';
 
+  // 🔎 FILTRO DE BUSCA POR NOME
   const filteredClients = clients.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // 📊 Ordenação alfabética por nome
+  const sortedClients = [...filteredClients].sort((a, b) =>
+    a.name.localeCompare(b.name, 'pt-BR')
+  );
+
+  //Paginação após carregameno de clientes
+  const totalPages = Math.ceil(
+    sortedClients.length / itemsPerPage
+  );
+
+  const paginatedClients = sortedClients.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
   );
 
   return (
@@ -192,7 +215,19 @@ function Clients() {
           placeholder="Buscar cliente"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-64 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500"
+          className="
+            w-64
+            max-w-md
+            border
+            border-gray-300
+            rounded-md
+            px-3
+            py-2
+            focus:outline-none
+            focus:ring-2
+            focus:ring-purple-500
+            bg-white
+          "
         />
       </div>
 
@@ -221,7 +256,7 @@ function Clients() {
                 <tr>
 
                     <td
-                        colSpan="6"
+                        colSpan="8"
                         className="py-10"
                     >
 
@@ -238,7 +273,7 @@ function Clients() {
                 <tr>
 
                     <td
-                        colSpan="6"
+                        colSpan="8"
                         className="text-center py-10 text-gray-500"
                     >
                         Nenhum cliente encontrado
@@ -248,7 +283,7 @@ function Clients() {
 
             ) : (
 
-                filteredClients.map((c) => (
+                paginatedClients.map((c) => (
                   <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
 
                     <td className="px-4 py-2 text-sm text-gray-800">{c.name}</td>
@@ -300,6 +335,12 @@ function Clients() {
 
         </table>
       </div>
+
+      <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+      />
 
       {/* MODAL */}
       {showModal && (

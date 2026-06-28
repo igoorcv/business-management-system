@@ -48,6 +48,9 @@ function Orders() {
     const [paymentSearch, setPaymentSearch] = useState('');
     const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
 
+    const [hasOpenMovement, setHasOpenMovement] = useState('');
+    const [movements, setMovements] = useState([]);
+
     const statusColumns = [
         'Em preparo',
         'Pronto',
@@ -81,6 +84,9 @@ function Orders() {
 
     const queryParams = new URLSearchParams(location.search);
     const movementId = queryParams.get('movement_id');
+    const movementId2 = Number(
+        new URLSearchParams(location.search).get('movement_id')
+    );
 
     const [showSummaryModal, setShowSummaryModal] = useState(false);
     const [movementSummary, setMovementSummary] = useState(null);
@@ -161,12 +167,31 @@ function Orders() {
                 : `http://localhost:5000/orders`;
 
             const response = await axios.get(url);
+
             setOrders(response.data);
 
         } catch (error) {
             console.error(error);
         }
     };
+
+    //Busca movimentos
+    const fetchMovements = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/movements');
+
+            setMovements(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+    };
+
+    // Encontre o movement_id acessado
+    const currentMovement =
+        movements?.find(m => m.id === movementId2);
 
     // Cria pedido
     const createOrder = async () => {
@@ -452,6 +477,7 @@ function Orders() {
 
     useEffect(() => {
         fetchOrders(movementId);
+        fetchMovements();
         fetchProducts();
     }, []);
 
@@ -582,7 +608,6 @@ function Orders() {
         setShowModal(true);
 
     };
-
 
     // Busca client por phone
     const handlePhoneChange = async (e) => {
@@ -934,6 +959,8 @@ function Orders() {
             console.error(err);
         }
     };
+    
+    
 
     const handleCloseMovement = async () => {
         try {
@@ -990,22 +1017,24 @@ function Orders() {
                     ← Voltar ao menu inicial
                 </button>
 
-                <button
-                    onClick={handleOpenSummary}
-                    className="
-                    w-48
-                    bg-red-50
-                    hover:bg-red-100
-                    text-red-600
-                    px-5
-                    py-2
-                    rounded
-                    font-medium
-                    transition-colors
-                    "
-                >
-                    Encerrar expediente
-                </button>
+                {currentMovement?.status === 'OPEN' && (
+                    <button
+                        onClick={handleOpenSummary}
+                        className="
+                            w-48
+                            bg-red-50
+                            hover:bg-red-100
+                            text-red-600
+                            px-5
+                            py-2
+                            rounded
+                            font-medium
+                            transition-colors
+                        "
+                    >
+                        Encerrar expediente
+                    </button>
+                )}
 
             </div>
 

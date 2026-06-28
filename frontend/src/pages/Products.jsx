@@ -5,6 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Pagination from '../components/Pagination';
 
 const categoryOrder = {
   Bebida: 1,
@@ -30,6 +31,8 @@ function Products() {
   const statusDropdownRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [form, setForm] = useState({
     code: '',
@@ -92,6 +95,10 @@ function Products() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+      setCurrentPage(1);
+  }, [search, products]);
 
   const resetForm = () => {
     setForm({ code: '', name: '', price: '', category: '', is_active: true });
@@ -159,6 +166,16 @@ function Products() {
   // 📊 ordenação por categoria
   const sortedProducts = [...filteredProducts].sort(
     (a, b) => categoryOrder[a.category] - categoryOrder[b.category]
+  );
+
+  //Paginação após carregameno de produtos
+  const totalPages = Math.ceil(
+    sortedProducts.length / itemsPerPage
+  );
+
+  const paginatedProducts = sortedProducts.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
   );
 
   return (
@@ -284,7 +301,7 @@ function Products() {
 
             ) : (
 
-                sortedProducts.map((p) => (
+                paginatedProducts.map((p) => (
                       <tr
                         key={p.id}
                         className="border-b border-gray-100 hover:bg-gray-50 transition"
@@ -348,6 +365,12 @@ function Products() {
         </table>
 
       </div>
+
+      <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+      />
 
       {/* MODAL */}
       {showModal && (

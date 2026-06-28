@@ -7,6 +7,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import MovementSummaryModal from '../components/MovementSummaryModal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Pagination from '../components/Pagination';
 
 function Home() {
 
@@ -21,7 +22,11 @@ function Home() {
   const [selectedMovement, setSelectedMovement] = useState(null);
   const [movementSummary, setMovementSummary] = useState(null);
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const [hasOpenMovement, setHasOpenMovement] = useState(false);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
 
   // ==================================================
@@ -156,6 +161,26 @@ function Home() {
     return `${hours}h ${minutes}min`;
   };
 
+  // Filtra movimentos a partir de uma data informada
+  const filteredMovements = movements.filter((c) =>
+    c.opened_at.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Ordena todos os movimentos a partir da data de início
+  const sortedMovements = [...filteredMovements].sort(
+    (a, b) => new Date(b.opened_at) - new Date(a.opened_at)
+  );
+
+  //Paginação após carregameno de produtos
+  const totalPages = Math.ceil(
+    sortedMovements.length / itemsPerPage
+  );
+
+  const paginatedMovements = sortedMovements.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+  );
+
 
   // ==========================================================================================================================
   // Executa as seguintes functions assim que o componente é carregado pela 1ª vez, mesmo que não exista interações de clicks 
@@ -164,6 +189,10 @@ function Home() {
     fetchMovements();
     fetchActiveMovement();
   }, []);
+
+   useEffect(() => {
+        setCurrentPage(1);
+    }, [movements]);
 
 
 
@@ -378,7 +407,7 @@ function Home() {
                 <tr>
 
                     <td
-                        colSpan="6"
+                        colSpan="7"
                         className="py-10"
                     >
 
@@ -405,7 +434,7 @@ function Home() {
 
             ) : (
 
-                movements.map((movement) => (
+                paginatedMovements.map((movement) => (
                   <tr
                     key={movement.id}
                     className="border-b border-gray-100 hover:bg-gray-50 transition"
@@ -485,94 +514,17 @@ function Home() {
             )
           }
 
-        </tbody>
-
-
-
-          <tbody>
-
-            {movements.map((movement) => (
-              <tr
-                key={movement.id}
-                className="border-b border-gray-100 hover:bg-gray-50 transition"
-              >
-
-                <td className="px-4 py-2 text-sm text-gray-800">
-                  {formatDateTime(
-                    movement.opened_at
-                  )}
-                </td>
-
-                <td className="px-4 py-2 text-sm text-gray-800">
-                  {formatDateTime(
-                    movement.closed_at
-                  )}
-                </td>
-
-                <td className="px-4 py-2 text-sm text-gray-800 font-medium">
-                  {movement.total_orders}
-                </td>
-
-                <td className="px-4 py-2 text-sm text-gray-800 font-medium">
-                  R$ {Number(
-                    movement.revenue
-                  ).toFixed(2)}
-                </td>
-
-                <td className="px-4 py-2 text-sm text-gray-800">
-                  {calculateDuration(
-                    movement.opened_at,
-                    movement.closed_at
-                  )}
-                </td>
-
-                <td className="px-4 py-2">
-
-                  {movement.status === 'OPEN' ? (
-                    <span className="px-3 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">
-                      Aberto
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-700">
-                      Encerrado
-                    </span>
-                  )}
-
-                </td>
-
-                <td className="px-4 py-2 text-left flex gap-2">
-
-                  <button
-                    onClick={async () => {
-                      const response = await axios.get(
-                        `http://localhost:5000/movements/${movement.id}/summary`
-                      );
-                      setMovementSummary(response.data);
-                      setSelectedMovement(movement);
-                      setShowCloseModal(true);
-                    }}
-                    className="w-30 px-3 py-1 text-xs border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors"
-                  >
-                    Ver resumo
-                  </button>
-
-                  <button
-                    onClick={() => navigate(`/orders?movement_id=${movement.id}`)}
-                    className="w-30 px-3 py-1 text-xs border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors"
-                  >
-                    Ver pedidos
-                  </button>
-
-                </td>
-
-              </tr>
-            ))}
-
           </tbody>
 
         </table>
 
       </div>
+
+      <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+      />
 
       {/* MODAL */}
       
