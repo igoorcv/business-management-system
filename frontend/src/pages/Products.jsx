@@ -2,7 +2,7 @@
 // PÁGINA DE PRODUTOS
 // =========================
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 
 const categoryOrder = {
@@ -12,7 +12,7 @@ const categoryOrder = {
   Sobremesa: 4
 };
 
-const categories = ['Bebida', 'Esfiha', 'Pizza', 'Sobremesa'];
+const categories = ['Bebida', 'Beirute', 'Caldo', 'Esfiha', 'Pizza', 'Porção', 'Sobremesa'];
 
 function Products() {
   const [products, setProducts] = useState([]);
@@ -24,6 +24,9 @@ function Products() {
 
   const [categorySearch, setCategorySearch] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+  const categoryDropdownRef = useRef(null);
+  const statusDropdownRef = useRef(null);
 
   const [form, setForm] = useState({
     code: '',
@@ -49,6 +52,30 @@ function Products() {
 
   useEffect(() => {
     fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target)
+      ) {
+        setShowCategoryDropdown(false);
+      }
+
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target)
+      ) {
+        setShowStatusDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const resetForm = () => {
@@ -292,7 +319,7 @@ function Products() {
 
             {/* HEADER */}
             <div className="px-6 py-5 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-semibold text-gray-800">
                 {editingId ? 'Edição de produto' : 'Criação de produto'}
               </h2>
             </div>
@@ -300,36 +327,10 @@ function Products() {
             {/* BODY */}
             <div className="p-6 space-y-5 col-span-4">
 
-              <input
-                className="w-full border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Código (opcional)"
-                value={form.code}
-                onChange={(e) =>
-                  setForm({ ...form, code: e.target.value })
-                }
-              />
-
-              <input
-                className="w-full border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500
-"
-                placeholder="Nome"
-                value={form.name}
-                onChange={(e) =>
-                  setForm({ ...form, name: e.target.value })
-                }
-              />
-
-              <input
-                type="number"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Preço"
-                value={form.price}
-                onChange={(e) =>
-                  setForm({ ...form, price: e.target.value })
-                }
-              />
-
-              <div className="w-full space-y-5">
+              <div 
+                ref={categoryDropdownRef}
+                className="w-full relative"
+              >
 
                 <input
                   type="text"
@@ -370,7 +371,6 @@ function Products() {
 
                   <div className="
                     absolute
-                    bottom-full
                     mb-1
                     z-50
                     w-full
@@ -414,7 +414,39 @@ function Products() {
 
               </div>
 
-              <div className="w-full relative">
+              <input
+                className="w-full border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Código (opcional)"
+                value={form.code}
+                onChange={(e) =>
+                  setForm({ ...form, code: e.target.value })
+                }
+              />
+
+              <input
+                className="w-full border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500
+"
+                placeholder="Nome"
+                value={form.name}
+                onChange={(e) =>
+                  setForm({ ...form, name: e.target.value })
+                }
+              />
+
+              <input
+                type="number"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Preço"
+                value={form.price}
+                onChange={(e) =>
+                  setForm({ ...form, price: e.target.value })
+                }
+              />
+
+              <div 
+                ref={statusDropdownRef}
+                className="w-full relative"
+              >
 
                 <input
                   type="text"
@@ -438,8 +470,6 @@ function Products() {
                   z-50
                   w-full
                   bg-white
-                  border
-                  border-gray-300
                   rounded-md
                   shadow-lg
                   overflow-hidden
