@@ -371,7 +371,7 @@ function Orders() {
 
         const phoneValue = order.phone || '';
 
-        if (phoneValue.length >= 8) {
+        if (phoneValue.length >= 8 && order.order_type === 'entrega') {
 
             try {
 
@@ -449,8 +449,10 @@ function Orders() {
             await axios.put(
                 `http://localhost:5000/orders/${editingId}`,
                 {
+                    order_type: orderType,
                     customer_name: customerName,
                     status: status,
+                    phone: phone,
                     payment_method: paymentMethod,
                     discount: Number(discount || 0),
                     delivery_fee: Number(deliveryFee || 0),

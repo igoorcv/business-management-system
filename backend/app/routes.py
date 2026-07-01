@@ -667,8 +667,10 @@ def update_order(id):
 
     data = request.json
     
+    order.order_type = data.get('order_type')
     order.customer_name = data.get('customer_name')
     order.status = data.get('status')
+    order.phone = data.get('phone')
     order.payment_method = data.get('payment_method')
     order.discount = data.get('discount', 0)
     order.delivery_fee = data.get('delivery_fee', 0)

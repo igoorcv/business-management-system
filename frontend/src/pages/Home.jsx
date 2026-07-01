@@ -279,7 +279,7 @@ function Home() {
           </div>
 
           {/* CARDS */}
-          <div className="grid grid-cols-5 gap-4 mt-6">
+          <div className="grid grid-cols-6 gap-4 mt-6">
 
             <div className="border rounded-lg p-4">
               <div className="text-gray-500 text-sm">
@@ -324,10 +324,20 @@ function Home() {
 
             <div className="border rounded-lg p-4">
               <div className="text-gray-500 text-sm">
-                Faturamento
+                Faturamento bruto
               </div>
 
               <div className="text-2xl font-bold text-green-600 mt-1">
+                R$ {Number(activeMovement?.revenue || 0).toFixed(2)}
+              </div>
+            </div>
+
+            <div className="border rounded-lg p-4">
+              <div className="text-gray-500 text-sm">
+                Comissão para entregadores
+              </div>
+
+              <div className="text-2xl font-bold text-red-600 mt-1">
                 R$ {Number(activeMovement?.revenue || 0).toFixed(2)}
               </div>
             </div>
