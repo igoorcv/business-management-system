@@ -2,64 +2,55 @@ import {
   BrowserRouter,
   Routes,
   Route,
-  Link
-} from 'react-router-dom';
+  Navigate
+} from "react-router-dom";
 
-import Products from './pages/Products';
-import Clients from './pages/Clients';
-import Orders from './pages/Orders';
+import Layout from "./components/Layout";
+
 import Home from "./pages/Home";
+import Products from "./pages/Products";
+import Clients from "./pages/Clients";
+import Orders from "./pages/Orders";
 
 function App() {
-
   return (
-
     <BrowserRouter>
 
-      <div className="p-4 bg-gray-100 flex gap-4">
+      <Layout>
 
-        <Link to="/home">
-          Home
-        </Link>
+        <Routes>
 
-        <Link to="/products">
-          Produtos
-        </Link>
+          <Route
+            path="/"
+            element={<Navigate to="/home" replace />}
+          />
 
-        <Link to="/clients">
-          Clientes
-        </Link>
+          <Route
+            path="/home"
+            element={<Home />}
+          />
 
-      </div>
+          <Route
+            path="/products"
+            element={<Products />}
+          />
 
-      <Routes>
+          <Route
+            path="/clients"
+            element={<Clients />}
+          />
 
-        <Route 
-          path="/home"
-          element={<Home />} 
-        />
+          <Route
+            path="/orders"
+            element={<Orders />}
+          />
 
-        <Route
-          path="/products"
-          element={<Products />}
-        />
+        </Routes>
 
-        <Route
-          path="/orders"
-          element={<Orders />}
-        />
-
-        <Route 
-          path="/clients"
-          element={<Clients />} 
-        />
-
-      </Routes>
+      </Layout>
 
     </BrowserRouter>
-
   );
-
 }
 
 export default App;
