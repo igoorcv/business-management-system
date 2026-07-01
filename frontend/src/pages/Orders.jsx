@@ -193,6 +193,9 @@ function Orders() {
     const currentMovement =
         movements?.find(m => m.id === movementId2);
 
+    const showCloseButton =
+        !movementId2 || currentMovement?.status === 'OPEN';
+
     // Cria pedido
     const createOrder = async () => {
 
@@ -1017,23 +1020,24 @@ function Orders() {
                     ← Voltar ao menu inicial
                 </button>
 
-                {currentMovement?.status === 'OPEN' && (
-                    <button
-                        onClick={handleOpenSummary}
-                        className="
-                            w-48
-                            bg-red-50
-                            hover:bg-red-100
-                            text-red-600
-                            px-5
-                            py-2
-                            rounded
-                            font-medium
-                            transition-colors
-                        "
-                    >
-                        Encerrar expediente
-                    </button>
+                {
+                    showCloseButton && (
+                        <button
+                            onClick={handleOpenSummary}
+                            className="
+                                w-48
+                                bg-red-50
+                                hover:bg-red-100
+                                text-red-600
+                                px-5
+                                py-2
+                                rounded
+                                font-medium
+                                transition-colors
+                            "
+                        >
+                            Encerrar expediente
+                        </button>
                 )}
 
             </div>
