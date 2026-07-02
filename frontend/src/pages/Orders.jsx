@@ -7,6 +7,7 @@ import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
+import { toast } from 'react-toastify';
 import {
     DragDropContext,
     Droppable,
@@ -91,6 +92,29 @@ function Orders() {
     const [showSummaryModal, setShowSummaryModal] = useState(false);
     const [movementSummary, setMovementSummary] = useState(null);
 
+    // Estado da pizza fracionada em montagem (1/3 ou 1/2).
+    // "count" = quantos sabores dessa pizza já foram adicionados.
+    // "required" = quantos sabores essa fração exige (2 para 1/2, 3 para 1/3).
+    // "groupId" = identificador único dessa pizza em montagem, compartilhado
+    // por todas as suas fatias (usado para remover o grupo inteiro de uma vez,
+    // sem afetar outras pizzas fracionadas do mesmo pedido).
+    const [pizzaAssembly, setPizzaAssembly] = useState({
+        active: false,
+        fraction: null,
+        required: 0,
+        count: 0,
+        groupId: null
+    });
+
+    // Regras de fração suportadas. Usar 1/2 e 1/3 "de verdade"
+    // (não valores redigitados na mão) evita erro de arredondamento.
+    const FRACTION_RULES = [
+        { value: 1 / 2, required: 2 },
+        { value: 1 / 3, required: 3 }
+    ];
+
+    const selectedQuantityRef = useRef(1);
+     
 
     // Busca produtos
     const fetchProducts = async () => {
@@ -148,12 +172,267 @@ function Orders() {
         setShowProductDropdown(false);
     };
 
-    // Remove produto
-    const removeProduct = (productId) => {
+    // ============================
+    // Helpers
+    // ============================
 
+    const isSameFraction = (a, b) => {
+        return Math.abs(a - b) < 0.000001;
+    };
+
+    // Cada linha da tabela de itens precisa de um identificador ÚNICO
+    // próprio, porque o mesmo product_id agora pode aparecer em mais
+    // de uma linha (ex.: 1/3 de Calabresa numa pizza fracionada +
+    // 1 pizza inteira de Calabresa em outra linha).
+    const generateLineId = () =>
+        (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : `line_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+
+    // ============================
+    // Regras de montagem da pizza
+    // ============================
+
+    // Retorna a regra de fração (½ ou ⅓) correspondente ao valor,
+    // ou undefined se o valor for uma quantidade inteira normal.
+    const getFractionRule = (value) =>
+        FRACTION_RULES.find(
+            rule => isSameFraction(rule.value, value)
+        );
+
+    // ============================
+    // Regra de preço da pizza fracionada
+    // ============================
+    // Numa pizza de 2 ou 3 sabores, o valor cobrado NÃO é a soma de cada
+    // fatia (preço_do_sabor / fração). É sempre o preço do sabor MAIS CARO
+    // do grupo — como se a pizza inteira custasse igual ao sabor mais caro.
+    //
+    // É calculado on-the-fly a partir do estado atual (não fica "salvo"
+    // em lugar nenhum), então se o usuário trocar um sabor inline na
+    // tabela, ou adicionar/remover fatias, o valor cobrado se recalcula
+    // sozinho — sem precisar sincronizar nada manualmente.
+
+    const getGroupChargedPrice = (groupId, allItems) => {
+
+        const pricesInGroup = allItems
+            .filter(item => item.group_id === groupId)
+            .map(item => item.product_price);
+
+        return pricesInGroup.length
+            ? Math.max(...pricesInGroup)
+            : 0;
+    };
+
+    // Preço unitário "efetivo" de uma linha: para pizza inteira (sem
+    // group_id) é o preço normal do produto. Para uma fatia de pizza
+    // fracionada, é o preço do sabor mais caro do grupo inteiro.
+    const getEffectiveUnitPrice = (item, allItems) => {
+
+        if (!item.group_id) return item.product_price;
+
+        return getGroupChargedPrice(item.group_id, allItems);
+    };
+
+
+    // ============================
+    // Add Product (FINAL FIXED)
+    // ============================
+
+    const addProduct2 = () => {
+
+        if (!selectedProductId) return;
+
+        const product = products.find(
+            p => p.id === Number(selectedProductId)
+        );
+
+        if (!product) return;
+
+        // Se já existe uma pizza fracionada em montagem, a quantidade
+        // usada é SEMPRE a fração dessa montagem — o Select fica travado
+        // nesse valor, isso aqui é só uma garantia extra.
+        const currentQuantity = pizzaAssembly.active
+            ? pizzaAssembly.fraction
+            : selectedQuantityRef.current;
+
+        const rule = getFractionRule(currentQuantity);
+
+        if (rule) {
+
+            // ==========================================
+            // Fluxo de pizza fracionada (1/2 ou 1/3)
+            // ==========================================
+
+            // Reaproveita o groupId da montagem em andamento, ou cria um
+            // novo se essa for a primeira fatia dessa pizza.
+            const groupId = pizzaAssembly.active
+                ? pizzaAssembly.groupId
+                : generateLineId();
+
+            const updatedProducts = [
+                ...selectedProducts,
+                {
+                    line_id: generateLineId(),
+                    group_id: groupId,
+                    product_id: product.id,
+                    product_name: product.name,
+                    product_price: product.price,
+                    quantity: currentQuantity,
+                    observation: ''
+                }
+            ];
+
+            setSelectedProducts(updatedProducts);
+
+            const newCount = pizzaAssembly.active
+                ? pizzaAssembly.count + 1
+                : 1;
+
+            if (newCount >= rule.required) {
+
+                // Pizza completa: destrava o campo quantidade
+                setPizzaAssembly({
+                    active: false,
+                    fraction: null,
+                    required: 0,
+                    count: 0,
+                    groupId: null
+                });
+
+                selectedQuantityRef.current = 1;
+                setQuantity(1);
+
+            } else {
+
+                // Ainda faltam sabores: mantém travado na mesma fração
+                setPizzaAssembly({
+                    active: true,
+                    fraction: currentQuantity,
+                    required: rule.required,
+                    count: newCount,
+                    groupId
+                });
+
+                selectedQuantityRef.current = currentQuantity;
+                setQuantity(currentQuantity);
+
+                toast.warning(
+                    `Selecione mais ${rule.required - newCount} sabor(es)`
+                );
+            }
+
+        } else {
+
+            // ==========================================
+            // Fluxo normal (quantidade inteira)
+            // ==========================================
+
+            // Só funde (soma quantidade) com um item existente do MESMO
+            // sabor que também seja quantidade inteira. Uma fatia de
+            // pizza fracionada (1/3, 1/2) nunca deve se misturar com uma
+            // pizza inteira do mesmo sabor — são linhas diferentes.
+            const existingProduct = selectedProducts.find(
+                p =>
+                    p.product_id === product.id &&
+                    !getFractionRule(p.quantity)
+            );
+
+            const updatedProducts = existingProduct
+                ? selectedProducts.map(item =>
+                    item === existingProduct
+                        ? {
+                            ...item,
+                            quantity: item.quantity + currentQuantity
+                        }
+                        : item
+                )
+                : [
+                    ...selectedProducts,
+                    {
+                        line_id: generateLineId(),
+                        product_id: product.id,
+                        product_name: product.name,
+                        product_price: product.price,
+                        quantity: currentQuantity,
+                        observation: ''
+                    }
+                ];
+
+            setSelectedProducts(updatedProducts);
+
+            selectedQuantityRef.current = 1;
+            setQuantity(1);
+        }
+
+        setSelectedProductId('');
+        setProductSearch('');
+        setShowProductDropdown(false);
+    };
+
+
+    // Remove produto (por linha, não por produto — o mesmo produto
+    // pode aparecer em mais de uma linha).
+    //
+    // Se a linha removida for uma fatia de pizza fracionada (tem group_id),
+    // remove TODAS as fatias irmãs (mesmo group_id) de uma vez, já que uma
+    // fatia sozinha não faz sentido sem o resto da pizza. Isso NÃO afeta
+    // outras pizzas fracionadas do pedido, mesmo que usem a mesma fração,
+    // porque a comparação é feita pelo group_id (único por pizza), não
+    // pela fração em si.
+    const removeProduct = (lineId) => {
+
+        const target = selectedProducts.find(
+            item => item.line_id === lineId
+        );
+
+        if (!target) return;
+
+        if (target.group_id) {
+
+            const siblingsCount = selectedProducts.filter(
+                item => item.group_id === target.group_id
+            ).length;
+
+            setSelectedProducts(
+                selectedProducts.filter(
+                    item => item.group_id !== target.group_id
+                )
+            );
+
+            // Se o grupo removido é justamente a pizza que está sendo
+            // montada agora, destrava o campo quantidade.
+            if (
+                pizzaAssembly.active &&
+                pizzaAssembly.groupId === target.group_id
+            ) {
+                setPizzaAssembly({
+                    active: false,
+                    fraction: null,
+                    required: 0,
+                    count: 0,
+                    groupId: null
+                });
+
+                selectedQuantityRef.current = 1;
+                setQuantity(1);
+            }
+
+            if (siblingsCount > 1) {
+                toast.info(
+                    `Pizza fracionada removida (${siblingsCount} fatia(s)).`
+                );
+            }
+
+            return;
+        }
+
+        // Item normal, ou fatia sem group_id conhecido (ex.: pedido
+        // antigo carregado do banco antes dessa informação existir):
+        // remove só essa linha, comportamento conservador.
         setSelectedProducts(
             selectedProducts.filter(
-                item => item.product_id !== productId
+                item => item.line_id !== lineId
             )
         );
 
@@ -290,7 +569,16 @@ function Orders() {
                         order_id: orderId,
                         product_id: item.product_id,
                         quantity: item.quantity,
-                        observation: item.observation
+                        observation: item.observation,
+                        group_id: item.group_id ?? null,
+                        // Preço unitário já aplicando a regra de negócio:
+                        // fatia de pizza fracionada cobra o valor do sabor
+                        // mais caro do grupo, não o preço individual do
+                        // sabor daquela fatia.
+                        unit_price: getEffectiveUnitPrice(
+                            item,
+                            selectedProducts
+                        )
                     }
                 );
             }
@@ -421,6 +709,12 @@ function Orders() {
 
         setSelectedProducts(
             order.items.map(item => ({
+                line_id: item.id ?? generateLineId(),
+                // group_id só existe se o backend salvar e devolver essa
+                // coluna. Se não vier, fica undefined e o removeProduct
+                // trata como item avulso (remove só a linha, sem adivinhar
+                // quais outras fatias seriam irmãs dela).
+                group_id: item.group_id ?? undefined,
                 id: item.id,
                 order_id: item.order_id,
                 product_id: item.product_id,
@@ -457,7 +751,17 @@ function Orders() {
                     discount: Number(discount || 0),
                     delivery_fee: Number(deliveryFee || 0),
                     change: Number(change || 0),
-                    items: selectedProducts
+                    // Envia o preço unitário já aplicando a regra do
+                    // sabor mais caro para fatias de pizza fracionada,
+                    // sem alterar o product_price individual salvo em
+                    // cada item (só usado como referência).
+                    items: selectedProducts.map(item => ({
+                        ...item,
+                        unit_price: getEffectiveUnitPrice(
+                            item,
+                            selectedProducts
+                        )
+                    }))
                 }
             );
 
@@ -519,10 +823,14 @@ function Orders() {
 
     };
 
-    // Soma total do pedido
+    // Soma total do pedido — para fatias de pizza fracionada, usa o
+    // preço do sabor mais caro do grupo (getEffectiveUnitPrice), não o
+    // preço individual de cada sabor.
     const orderTotal = selectedProducts.reduce(
         (total, item) =>
-            total + (item.product_price * item.quantity),
+            total + (
+                getEffectiveUnitPrice(item, selectedProducts) * item.quantity
+            ),
         0
     );
 
@@ -600,6 +908,12 @@ function Orders() {
 
         setSelectedProducts(
             order.items.map(item => ({
+                line_id: item.id ?? generateLineId(),
+                // group_id só existe se o backend salvar e devolver essa
+                // coluna. Se não vier, fica undefined e o removeProduct
+                // trata como item avulso (remove só a linha, sem adivinhar
+                // quais outras fatias seriam irmãs dela).
+                group_id: item.group_id ?? undefined,
                 id: item.id,
                 order_id: item.order_id,
                 product_id: item.product_id,
@@ -986,6 +1300,8 @@ function Orders() {
             console.error(error);
         }
     };
+
+
 
     // FRONT-END
     return (
@@ -1878,6 +2194,25 @@ function Orders() {
                                         Informações do pedido
                                     </h3>
 
+                                    {/* Aviso de pizza fracionada em montagem */}
+                                    {pizzaAssembly.active && (
+                                        <div className="
+                                            mb-3
+                                            px-3
+                                            py-2
+                                            rounded-md
+                                            bg-purple-50
+                                            border
+                                            border-purple-200
+                                            text-purple-700
+                                            text-sm
+                                        ">
+                                            Montando pizza de {pizzaAssembly.fraction === 1/2 ? '½' : '⅓'} —
+                                            {' '}faltam {pizzaAssembly.required - pizzaAssembly.count} sabor(es).
+                                            Escolha o próximo sabor e clique em "Adicionar item".
+                                        </div>
+                                    )}
+
                                     {/* Campos */}
                                     <div className="grid grid-cols-12 gap-4 mb-4">
 
@@ -1961,16 +2296,17 @@ function Orders() {
                                         {/* Quantidade */}
                                         <div className="col-span-2">
                                             <Select
-                                                isDisabled={isReadOnly}
+                                                isDisabled={isReadOnly || pizzaAssembly.active}
                                                 options={quantityOptions}
                                                 value={
                                                     quantityOptions.find(
                                                         option => option.value === quantity
                                                     )
                                                 }
-                                                onChange={(selected) =>
-                                                    setQuantity(selected?.value)
-                                                }
+                                                onChange={(selected) => {
+                                                    selectedQuantityRef.current = selected?.value;
+                                                    setQuantity(selected?.value);
+                                                }}
                                                 placeholder="Qtd."
                                                 isSearchable
                                                 styles={{
@@ -2018,7 +2354,7 @@ function Orders() {
                                         <div className="col-span-3">
                                             <button
                                                 disabled={isReadOnly}
-                                                onClick={addProduct}
+                                                onClick={addProduct2}
                                                 className={`
                                                     w-full 
                                                     h-full 
@@ -2095,7 +2431,7 @@ function Orders() {
                                                     {selectedProducts.map(item => (
 
                                                         <tr
-                                                            key={item.product_id}
+                                                            key={item.line_id ?? item.product_id}
                                                             className="
                                                                 border-b
                                                                 border-gray-100
@@ -2104,9 +2440,109 @@ function Orders() {
                                                             "
                                                         >
 
-                                                            {/* Produto */}
+                                                            {/* Produto (sabor) — editável diretamente na linha */}
                                                             <td className="px-4 py-2 text-left text-sm">
-                                                                {item.product_name}
+
+                                                                <div className="w-48">
+
+                                                                    <Select
+                                                                        isDisabled={isReadOnly}
+                                                                        options={
+                                                                            products.map(p => ({
+                                                                                value: p.id,
+                                                                                label: p.name
+                                                                            }))
+                                                                        }
+                                                                        value={
+                                                                            products
+                                                                                .map(p => ({
+                                                                                    value: p.id,
+                                                                                    label: p.name
+                                                                                }))
+                                                                                .find(
+                                                                                    option => option.value === item.product_id
+                                                                                ) || {
+                                                                                    value: item.product_id,
+                                                                                    label: item.product_name
+                                                                                }
+                                                                        }
+                                                                        onChange={(selected) => {
+
+                                                                            if (!selected) return;
+
+                                                                            const newProduct = products.find(
+                                                                                p => p.id === selected.value
+                                                                            );
+
+                                                                            if (!newProduct) return;
+
+                                                                            // Troca só o sabor (produto) dessa linha.
+                                                                            // Quantidade, fração e observação continuam
+                                                                            // as mesmas — não mexe em pizzaAssembly.
+                                                                            const updated =
+                                                                                selectedProducts.map(prod =>
+                                                                                    prod.line_id === item.line_id
+                                                                                        ? {
+                                                                                            ...prod,
+                                                                                            product_id: newProduct.id,
+                                                                                            product_name: newProduct.name,
+                                                                                            product_price: newProduct.price
+                                                                                        }
+                                                                                        : prod
+                                                                                );
+
+                                                                            setSelectedProducts(updated);
+                                                                        }}
+                                                                        isSearchable
+                                                                        maxMenuHeight={180}
+                                                                        styles={{
+                                                                            control: (provided) => ({
+                                                                                ...provided,
+                                                                                minHeight: '38px',
+                                                                                height: '38px',
+                                                                                borderColor: 'border-gray-300',
+                                                                                borderRadius: '0.375rem',
+                                                                                boxShadow: 'none',
+                                                                            }),
+
+                                                                            valueContainer: (provided) => ({
+                                                                                ...provided,
+                                                                                height: '38px',
+                                                                                padding: '0 8px',
+                                                                            }),
+
+                                                                            input: (provided) => ({
+                                                                                ...provided,
+                                                                                margin: '0',
+                                                                                padding: '0',
+                                                                            }),
+
+                                                                            indicatorsContainer: (provided) => ({
+                                                                                ...provided,
+                                                                                height: '38px',
+                                                                            }),
+
+                                                                            option: (provided, state) => ({
+                                                                                ...provided,
+                                                                                backgroundColor: state.isFocused
+                                                                                    ? '#E9D5FF'
+                                                                                    : 'white',
+
+                                                                                color: state.isSelected
+                                                                                    ? 'black'
+                                                                                    : '#6B21A8',
+                                                                            }),
+                                                                            menuPortal: (provided) => ({
+                                                                                ...provided,
+                                                                                zIndex: 9999,
+                                                                            })
+                                                                        }}
+                                                                        menuPortalTarget={document.body}
+                                                                        menuPosition="fixed"
+                                                                    />
+
+                                                                </div>
+
                                                             </td>
 
                                                             {/* Quantidade */}
@@ -2126,7 +2562,7 @@ function Orders() {
 
                                                                             const updated =
                                                                                 selectedProducts.map(prod =>
-                                                                                    prod.product_id === item.product_id
+                                                                                    prod.line_id === item.line_id
                                                                                         ? {
                                                                                             ...prod,
                                                                                             quantity: selected?.value
@@ -2144,7 +2580,7 @@ function Orders() {
                                                                                 ...provided,
                                                                                 minHeight: '38px',
                                                                                 height: '38px',
-                                                                                borderColor: '#E9D5FF',
+                                                                                borderColor: 'border-gray-300',
                                                                                 borderRadius: '0.375rem',
                                                                                 boxShadow: 'none',
                                                                             }),
@@ -2201,7 +2637,7 @@ function Orders() {
                                                                         onChange={(e) => {
                                                                             const updated =
                                                                                 selectedProducts.map(prod =>
-                                                                                    prod.product_id === item.product_id
+                                                                                    prod.line_id === item.line_id
                                                                                         ? {
                                                                                             ...prod,
                                                                                             observation: e.target.value
@@ -2217,12 +2653,31 @@ function Orders() {
 
                                                             {/* Unitário */}
                                                             <td className="px-4 py-2 text-left text-sm">
-                                                                R$ {item.product_price.toFixed(2)}
+                                                                R$ {
+                                                                    getEffectiveUnitPrice(
+                                                                        item,
+                                                                        selectedProducts
+                                                                    ).toFixed(2)
+                                                                }
+                                                                {
+                                                                    item.group_id && (
+                                                                        <div className="text-xs text-gray-400">
+                                                                            sabor mais caro do grupo
+                                                                        </div>
+                                                                    )
+                                                                }
                                                             </td>
 
                                                             {/* Subtotal */}
                                                             <td className="px-4 py-2 text-left text-sm font-medium">
-                                                                R$ {(item.product_price * item.quantity).toFixed(2)}
+                                                                R$ {
+                                                                    (
+                                                                        getEffectiveUnitPrice(
+                                                                            item,
+                                                                            selectedProducts
+                                                                        ) * item.quantity
+                                                                    ).toFixed(2)
+                                                                }
                                                             </td>
 
                                                             {/* Ações */}
@@ -2230,7 +2685,7 @@ function Orders() {
 
                                                                 <button
                                                                     onClick={() =>
-                                                                        removeProduct(item.product_id)
+                                                                        removeProduct(item.line_id)
                                                                     }
                                                                     disabled={isReadOnly}
                                                                     className={`

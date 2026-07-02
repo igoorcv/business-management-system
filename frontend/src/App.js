@@ -4,9 +4,9 @@ import {
   Route,
   Navigate
 } from "react-router-dom";
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Layout from "./components/Layout";
-
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Clients from "./pages/Clients";
@@ -17,6 +17,16 @@ function App() {
     <BrowserRouter>
 
       <Layout>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          draggable
+          theme="colored"
+        />
 
         <Routes>
 
@@ -50,6 +60,8 @@ function App() {
       </Layout>
 
     </BrowserRouter>
+
+
   );
 }
 

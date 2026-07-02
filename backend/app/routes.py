@@ -707,16 +707,24 @@ def update_order(id):
 
             if item:
 
+                # OBS: antes esse bloco não atualizava product_id, então
+                # trocar o sabor de uma linha (edição inline na tabela)
+                # não era salvo. Corrigido abaixo.
+                item.product_id = item_data.get('product_id', item.product_id)
                 item.quantity = item_data['quantity']
                 item.observation = item_data.get('observation')
-                
+                item.group_id = item_data.get('group_id')
+                item.unit_price = item_data.get('unit_price')
+
         else:
 
             new_item = OrderItem(
                 order_id=id,
                 product_id=item_data['product_id'],
                 quantity=item_data['quantity'],
-                observation=item_data.get('observation')
+                observation=item_data.get('observation'),
+                group_id=item_data.get('group_id'),
+                unit_price=item_data.get('unit_price')
             )
 
             db.session.add(new_item)
@@ -817,7 +825,9 @@ def create_order_item():
         order_id=data['order_id'],
         product_id=data['product_id'],
         quantity=data['quantity'],
-        observation=data.get('observation')
+        observation=data.get('observation'),
+        group_id=data.get('group_id'),
+        unit_price=data.get('unit_price')
     )
 
     db.session.add(item)
@@ -844,4 +854,3 @@ def delete_order_item(id):
     return jsonify({
         'message': 'Item removido'
     })
-

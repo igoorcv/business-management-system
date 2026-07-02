@@ -238,7 +238,17 @@ class Order(db.Model):
 
         for item in self.items:
 
-            subtotal += item.product.price * item.quantity
+            # Usa o preço efetivo salvo na linha (já aplicando a regra do
+            # sabor mais caro para pizzas fracionadas). Se não existir
+            # (item antigo, salvo antes dessa coluna existir), cai de
+            # volta no preço "cru" do produto — comportamento anterior.
+            unit_price = (
+                item.unit_price
+                if item.unit_price is not None
+                else item.product.price
+            )
+
+            subtotal += unit_price * item.quantity
 
         self.total = (
             subtotal
@@ -310,6 +320,24 @@ class OrderItem(db.Model):
         nullable=False,
         default=1
     )
+
+    # Identifica a qual "pizza fracionada" essa fatia pertence (1/2 ou 1/3
+    # de sabores). Compartilhado por todas as fatias irmãs da mesma pizza.
+    # É None para itens normais (pizza inteira / quantidade inteira).
+    group_id = db.Column(
+        db.String(64),
+        nullable=True
+    )
+
+    # Preço unitário efetivamente cobrado por essa linha, já aplicando a
+    # regra de negócio: numa pizza fracionada, cobra-se o preço do sabor
+    # mais caro do grupo — não o preço individual de cada sabor.
+    # Se vier None (pedidos antigos, ou item criado sem essa informação),
+    # o cálculo do total cai de volta no preço do produto (product.price).
+    unit_price = db.Column(
+        db.Float,
+        nullable=True
+    )
     
     observation = db.Column(
         db.Text,
@@ -330,5 +358,14 @@ class OrderItem(db.Model):
             'product_name': self.product.name if self.product else '',
             'product_price': self.product.price if self.product else '',
             'quantity': self.quantity,
-            'observation': self.observation
+            'observation': self.observation,
+            'group_id': self.group_id,
+            # Preço efetivamente cobrado nessa linha. Se não houver um
+            # unit_price salvo (item antigo), retorna o preço "cru" do
+            # produto — mesmo comportamento de antes dessa coluna existir.
+            'unit_price': (
+                self.unit_price
+                if self.unit_price is not None
+                else (self.product.price if self.product else None)
+            )
         }
